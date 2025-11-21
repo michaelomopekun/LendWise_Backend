@@ -40,4 +40,14 @@ export async function dbSetUp()
     return pool;
 }
 
-// export default dbSetUp();
+async function createTables(pool: any)
+{
+    try
+    {
+
+    }
+    catch (error)
+    {
+        
+    }
+}
