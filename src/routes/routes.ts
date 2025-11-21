@@ -1,12 +1,33 @@
 import { Router } from 'express';
 import { AuthController } from '../controller/authController';
+import { LoanController } from '../controller/loanController';
+import { CustomerController } from '../controller/customerController';
+import { authMiddleware } from '../middleware/auth';
+
 
 const router = Router();
 
-const authController = new AuthController();
+const protectedRouter = Router();
+protectedRouter.use(authMiddleware);
 
-router.post('/register', authController.Register.bind(authController));
-router.post('/login', authController.Login.bind(authController));
-router.post('/officer-login', authController.OfficerLogin.bind(authController));
+const authController = new AuthController();
+const loanController = new LoanController();
+const customerController = new CustomerController();
+
+
+// Authentication routes
+router.post('/auth/register', authController.Register.bind(authController));
+router.post('/auth/login', authController.Login.bind(authController));
+router.post('/auth/officer-login', authController.OfficerLogin.bind(authController));
+
+// loan routes
+protectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
+protectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
+protectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
+
+// customer routes
+protectedRouter.get('/customers/profile', customerController.GetCustomerProfile.bind(customerController));
+
+router.use(protectedRouter);
 
 export default router;

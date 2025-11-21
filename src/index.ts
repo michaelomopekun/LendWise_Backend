@@ -29,9 +29,9 @@ app.set("trust proxy", true);
 swaggerDocs(app, PORT);
 
 // Routes
-app.use('/api/auth', router);
-
-generateHash();
+app.use('/api', router);
+// app.use('/api/loans', router);
+// app.use('/api/customers', router);
 
 
 const startServer = async () =>
