@@ -2,9 +2,13 @@ import express from "express";
 import cors from "cors";
 import {dbSetUp} from "./db/database"
 import dotenv from "dotenv";
+import router from "./routes/routes";
+import { swaggerDocs } from "./docs/swagger";
+import { generateHash } from "./utils/ge";
+
 
 dotenv.config();
-const PORT = process.env.PORT || 2000;
+const PORT = parseInt(process.env.PORT || "2000");
 
 const app = express();
 
@@ -20,6 +24,15 @@ app.use(cors(
 }));
 
 app.set("trust proxy", true);
+
+// Swagger
+swaggerDocs(app, PORT);
+
+// Routes
+app.use('/api/auth', router);
+
+generateHash();
+
 
 const startServer = async () =>
 {

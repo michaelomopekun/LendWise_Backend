@@ -49,7 +49,7 @@ async function createTables(pool: any)
         // customers table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS customers (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id VARCHAR(36) PRIMARY KEY,
                 firstName VARCHAR(100) NOT NULL,
                 lastName VARCHAR(100) NOT NULL,
                 phoneNumber VARCHAR(20) NOT NULL,
@@ -67,7 +67,7 @@ async function createTables(pool: any)
         // loan_officers table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS loan_officers (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id VARCHAR(36) PRIMARY KEY,
                 firstName VARCHAR(100) NOT NULL,
                 lastName VARCHAR(100) NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
@@ -83,7 +83,7 @@ async function createTables(pool: any)
         // loan_types table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS loan_types (
-                id INT AUTO_INCREMENT PRIMARY KEY,
+                id VARCHAR(36) PRIMARY KEY,
                 name VARCHAR(100) NOT NULL,
                 description TEXT,
                 interestRate DECIMAL(5, 2) NOT NULL,
@@ -99,10 +99,10 @@ async function createTables(pool: any)
         // loans table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS loans (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                customerId INT NOT NULL,
-                officerId INT,
-                loan_typeId INT NOT NULL,
+                id VARCHAR(36) PRIMARY KEY,
+                customerId VARCHAR(36) NOT NULL,
+                officerId VARCHAR(36),
+                loan_typeId VARCHAR(36) NOT NULL,
                 amount DECIMAL(12, 2) NOT NULL,
                 interestRate DECIMAL(5, 2) NOT NULL,
                 tenure_month INT NOT NULL,
@@ -123,8 +123,8 @@ async function createTables(pool: any)
         // repayments table
         await pool.query(`
             CREATE TABLE IF NOT EXISTS repayments (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                loanId INT NOT NULL,
+                id VARCHAR(36) PRIMARY KEY,
+                loanId VARCHAR(36) NOT NULL,
                 amountPaid DECIMAL(12, 2) NOT NULL,
                 paymentDate TIMESTAMP,
                 remainingBalance DECIMAL(12, 2) NOT NULL,
