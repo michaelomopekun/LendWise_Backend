@@ -167,3 +167,72 @@
  *       500:
  *         description: Could not get loan details
  */
+
+/**
+ * @swagger
+ * /api/loans:
+ *   post:
+ *     summary: Request a new loan
+ *     description: Submit a loan request with specified amount, loan type, and tenure
+ *     tags:
+ *       - Loans
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - loanTypeId
+ *               - amount
+ *               - tenureMonth
+ *             properties:
+ *               loanTypeId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440100"
+ *               amount:
+ *                 type: number
+ *                 example: 50000
+ *               tenureMonth:
+ *                 type: integer
+ *                 example: 12
+ *     responses:
+ *       201:
+ *         description: Loan request submitted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan request submitted successfully"
+ *                 loan:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     customerId:
+ *                       type: string
+ *                     loanTypeId:
+ *                       type: string
+ *                     amount:
+ *                       type: number
+ *                     interestRate:
+ *                       type: number
+ *                     tenureMonth:
+ *                       type: integer
+ *                     status:
+ *                       type: string
+ *                       example: "pending"
+ *       400:
+ *         description: Invalid input or amount out of range
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan type or customer not found
+ *       500:
+ *         description: Could not request loan
+ */

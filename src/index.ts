@@ -4,7 +4,6 @@ import {dbSetUp} from "./db/database"
 import dotenv from "dotenv";
 import router from "./routes/routes";
 import { swaggerDocs } from "./docs/swagger";
-import { generateHash } from "./utils/ge";
 
 
 dotenv.config();
@@ -37,6 +36,8 @@ app.use('/api', router);
 const startServer = async () =>
 {
     await dbSetUp();
+
+    // await seedLoanTypes();
 
     app.listen(PORT, () => {
         console.log(`🚀Server is running on http://localhost:${PORT}/apis`);
