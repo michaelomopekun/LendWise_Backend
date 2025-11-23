@@ -22,6 +22,9 @@ router.post('/auth/officer-login', authController.OfficerLogin.bind(authControll
 
 // loan routes
 protectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
+protectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
+protectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
+
 protectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
 protectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
 protectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));

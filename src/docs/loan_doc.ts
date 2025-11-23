@@ -236,3 +236,117 @@
  *       500:
  *         description: Could not request loan
  */
+
+
+/**
+ * @swagger
+ * /api/loans/active:
+ *   get:
+ *     summary: Get all active loans
+ *     description: Retrieve a list of all active loans for the authenticated customer with outstanding balance details
+ *     tags:
+ *       - Loans
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active loans retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 activeLoans:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "550e8400-e29b-41d4-a716-446655440010"
+ *                       amount:
+ *                         type: number
+ *                         example: 50000
+ *                       outStandingBalance:
+ *                         type: number
+ *                         example: 10000
+ *                       tenure_month:
+ *                         type: integer
+ *                         example: 12
+ *                       status:
+ *                         type: string
+ *                         example: "active"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                       loanTypeName:
+ *                         type: string
+ *                         example: "Personal Loan"
+ *                       interestRate:
+ *                         type: number
+ *                         example: 5.5
+ *       401:
+ *         description: Unauthorized - No token provided
+ *       500:
+ *         description: Could not retrieve active loans
+ */
+
+/**
+ * @swagger
+ * /api/loans/repay:
+ *   post:
+ *     summary: Process a loan repayment
+ *     description: Make a payment towards an active loan and reduce the outstanding balance
+ *     tags:
+ *       - Loans
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - loanId
+ *               - amount
+ *             properties:
+ *               loanId:
+ *                 type: string
+ *                 description: UUID of the loan to repay
+ *                 example: "550e8400-e29b-41d4-a716-446655440010"
+ *               amount:
+ *                 type: number
+ *                 description: Repayment amount
+ *                 example: 5000
+ *     responses:
+ *       200:
+ *         description: Loan repayment processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan repayment processed successfully"
+ *                 newOutstandingBalance:
+ *                   type: number
+ *                   example: 5000
+ *       400:
+ *         description: Invalid repayment amount or missing fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Repayment amount must be greater than 0 and less than or equal to outstanding balance"
+ *       401:
+ *         description: Unauthorized - No token provided
+ *       404:
+ *         description: Active loan not found
+ *       500:
+ *         description: Could not process loan repayment
+ */

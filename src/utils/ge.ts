@@ -38,3 +38,78 @@
 //         console.error("✗ Failed to seed loan types:", error);
 //     }
 // }
+
+// import { dbSetUp } from "../db/database";
+// import { v4 as uuidv4 } from 'uuid';
+
+// export async function seedLoans() {
+//     try {
+//         const pool = await dbSetUp();
+
+//         // Get a customer ID (replace with actual customer ID from your database)
+//         const [customers] = await pool.query(
+//             'SELECT id FROM customers LIMIT 1'
+//         );
+
+//         if (!Array.isArray(customers) || customers.length === 0) {
+//             console.error("✗ No customers found. Please create a customer first.");
+//             return;
+//         }
+
+//         const customerId = "0886641e-e5b1-4e43-9b73-76076b621c64";
+
+//         // Get loan type IDs
+//         const [loanTypes] = await pool.query(
+//             'SELECT id, name FROM loan_types'
+//         );
+
+//         if (!Array.isArray(loanTypes) || loanTypes.length < 4) {
+//             console.error("✗ Not enough loan types. Please seed loan types first.");
+//             return;
+//         }
+
+//         const loans = [
+//             {
+//                 loanTypeId: (loanTypes as any)[0].id,
+//                 amount: 50000,
+//                 interestRate: 5.5,
+//                 tenureMonth: 12,
+//                 outStandingBalance: 25000
+//             },
+//             {
+//                 loanTypeId: (loanTypes as any)[1].id,
+//                 amount: 500000,
+//                 interestRate: 4.5,
+//                 tenureMonth: 24,
+//                 outStandingBalance: 400000
+//             },
+//             {
+//                 loanTypeId: (loanTypes as any)[2].id,
+//                 amount: 200000,
+//                 interestRate: 6.5,
+//                 tenureMonth: 18,
+//                 outStandingBalance: 150000
+//             },
+//             {
+//                 loanTypeId: (loanTypes as any)[3].id,
+//                 amount: 300000,
+//                 interestRate: 7.5,
+//                 tenureMonth: 36,
+//                 outStandingBalance: 200000
+//             }
+//         ];
+
+//         for (const loan of loans) {
+//             const loanId = uuidv4();
+//             await pool.query(
+//                 `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance, applicationDate, approvalDate)
+//                  VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
+//                 [loanId, customerId, loan.loanTypeId, loan.amount, loan.interestRate, loan.tenureMonth, loan.outStandingBalance]
+//             );
+//         }
+
+//         console.log("✓ 4 Active loans seeded successfully for customer:", customerId);
+//     } catch (error) {
+//         console.error("✗ Failed to seed loans:", error);
+//     }
+// }

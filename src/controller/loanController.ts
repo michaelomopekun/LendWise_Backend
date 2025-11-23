@@ -151,7 +151,7 @@ export class LoanController
 
             // Get loan type with interest rate
             const [loanType] = await pool.query(
-                'SELECT id, interestRate, minAmount, maxAmount FROM loan_types WHERE id = ?',
+                'SELECT id, name, interestRate, minAmount, maxAmount FROM loan_types WHERE id = ?',
                 [loanTypeId]
             );
 
@@ -166,7 +166,7 @@ export class LoanController
             if (amount < type.minAmount || amount > type.maxAmount)
             {
                 return res.status(400).json({ 
-                    message: `Amount must be between ${type.minAmount} and ${type.maxAmount}` 
+                    message: `Amount must be between ${type.minAmount} and ${type.maxAmount} for a ${type.name}` 
                 });
             }
 
@@ -183,11 +183,12 @@ export class LoanController
 
             // Create loan request with interest rate from loan type
             const loanId = uuidv4();
+            const outStandingBalance = amount + (amount * (type.interestRate / 100));
 
             await pool.query(
                 `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance)
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
-                [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, amount]
+                [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, outStandingBalance]
             );
 
             res.status(201).json({
@@ -209,4 +210,96 @@ export class LoanController
             res.status(500).json({ message: 'could not request loan', error: error });
         }
     }
+
+    async GetActiveLoans(req: any, res: any) 
+    {
+        try
+        {
+            const userId = req.user.id;
+
+            const pool = await dbSetUp();
+
+            const [activeLoans] = await pool.query(
+                `SELECT l.id, l.amount, l.outStandingBalance, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate
+                    FROM loans l
+                    JOIN loan_types lt ON l.loan_typeId = lt.id
+                    WHERE l.customerId = ? AND l.status = 'active'`,
+                [userId]
+            );
+
+            // if (!Array.isArray(activeLoans) || activeLoans.length === 0) 
+            // {
+            //     return res.status(200).json({ activeLoans: activeLoans });
+            // }
+
+            res.status(200).json({ activeLoans: activeLoans });
+        }
+        catch (error)
+        {
+            console.error('GetActiveLoans error:', error);
+
+            res.status(500).json({ message: 'could not retrieve active loans', error: error });
+        }
+    }
+
+
+    async RepayLoan(req: any, res: any)
+    {
+        try
+        {
+            const userId = req.user.id;
+            const { loanId, amount } = req.body;
+
+            // Validate input
+            if (!loanId || !amount)
+            {
+                return res.status(400).json({ 
+                    message: 'Missing required fields: loanId, amount' 
+                });
+            }
+
+            const pool = await dbSetUp();
+
+            // Verify loan exists and belongs to user
+            const [loan] = await pool.query(
+                'SELECT id, outStandingBalance FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
+                [loanId, userId]
+            );
+
+            if (!Array.isArray(loan) || loan.length === 0)
+            {
+                return res.status(404).json({ message: 'Active loan not found' });
+            }
+
+            const currentLoan = (loan as any)[0];
+
+            // Validate repayment amount
+            if (amount <= 0 || amount > currentLoan.outStandingBalance)
+            {
+                return res.status(400).json({ 
+                    message: 'Repayment amount must be greater than 0 and less than or equal to outstanding balance' 
+                });
+            }
+
+            // Process repayment
+            const newOutstandingBalance = currentLoan.outStandingBalance - amount;
+
+            await pool.query(
+                'UPDATE loans SET outStandingBalance = ? WHERE id = ?',
+                [newOutstandingBalance, loanId]
+            );
+
+            res.status(200).json({
+                message: 'Loan repayment processed successfully',
+                newOutstandingBalance: newOutstandingBalance
+            });
+        }
+        catch (error)
+        {
+            console.error('RepayLoan error:', error);
+
+            res.status(500).json({ message: 'could not process loan repayment', error: error });
+        }
+    }
+    
 }
