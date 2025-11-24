@@ -350,3 +350,68 @@
  *       500:
  *         description: Could not process loan repayment
  */
+
+/**
+ * @swagger
+ * /api/loans/{id}/repayment_history:
+ *   get:
+ *     summary: Get loan repayment history
+ *     description: Retrieve all repayments made for a specific loan ordered by payment date (newest first)
+ *     tags:
+ *       - Loans
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The loan ID (UUID)
+ *         example: "550e8400-e29b-41d4-a716-446655440010"
+ *     responses:
+ *       200:
+ *         description: Repayment history retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Repayment history retrieved successfully"
+ *                 repaymentHistory:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "550e8400-e29b-41d4-a716-446655440020"
+ *                       loanId:
+ *                         type: string
+ *                         example: "550e8400-e29b-41d4-a716-446655440010"
+ *                       amountPaid:
+ *                         type: number
+ *                         example: 5000
+ *                       paymentDate:
+ *                         type: string
+ *                         format: date-time
+ *                       remainingBalance:
+ *                         type: number
+ *                         example: 20000
+ *                       dueDate:
+ *                         type: string
+ *                         format: date-time
+ *                       status:
+ *                         type: string
+ *                         example: "completed"
+ *       400:
+ *         description: Missing loan ID parameter
+ *       401:
+ *         description: Unauthorized - No token provided
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Could not get loan repayment history
+ */

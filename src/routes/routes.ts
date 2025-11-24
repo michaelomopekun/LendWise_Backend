@@ -25,6 +25,7 @@ protectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanContro
 protectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
 protectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
 
+protectedRouter.get('/loans/:id/repayment_history', loanController.GetLoanRepaymentHistory.bind(loanController));
 protectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
 protectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
 protectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));

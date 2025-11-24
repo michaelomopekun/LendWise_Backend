@@ -15,7 +15,7 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [loan] = await pool.query(
-                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate
+                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outstandingBalance, l.customerId
                  FROM loans l
                  JOIN loan_types lt ON l.loan_typeId = lt.id
                  WHERE l.id = ? AND l.customerId = ?`,
@@ -63,14 +63,13 @@ export class LoanController
                 [customerId]
             );
 
-            // Get next repayment amount (earliest due date that is pending)
+            // Get next due loan's outstanding balance (earliest dueDate)
             const [nextRepayment] = await pool.query(
-                `SELECT COALESCE(r.amountPaid, 0) AS nextRepaymentAmount
-                 FROM repayments r
-                 JOIN loans l ON r.loanId = l.id
-                 WHERE l.customerId = ? AND r.status = 'pending'
-                 ORDER BY r.dueDate ASC
-                 LIMIT 1`,
+                `SELECT COALESCE(l.outStandingBalance, 0) AS nextRepaymentAmount
+                FROM loans l
+                WHERE l.customerId = ? AND l.status = 'active'
+                ORDER BY l.dueDate ASC
+                LIMIT 1`,
                 [customerId]
             );
 
@@ -102,10 +101,11 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [loans] = await pool.query(
-                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate
+                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outStandingBalance, l.dueDate, l.applicationDate
                  FROM loans l
                  JOIN loan_types lt ON l.loan_typeId = lt.id
-                 WHERE l.customerId = ?`,
+                 WHERE l.customerId = ?
+                 ORDER BY l.createdAt DESC`,
                 [customerId]
             );
 
@@ -184,11 +184,15 @@ export class LoanController
             // Create loan request with interest rate from loan type
             const loanId = uuidv4();
             const outStandingBalance = amount + (amount * (type.interestRate / 100));
+            const now = new Date();
+            const dueDate = new Date(now);
+            dueDate.setMonth(dueDate.getMonth() + tenureMonth);
+
 
             await pool.query(
-                `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance)
-                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?)`,
-                [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, outStandingBalance]
+                `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance, dueDate)
+                VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+                [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
             );
 
             res.status(201).json({
@@ -198,6 +202,7 @@ export class LoanController
                     amount,
                     interestRate: type.interestRate,
                     tenureMonth,
+                    dueDate: dueDate,
                     status: 'pending',
                     createdAt: new Date()
                 }
@@ -258,11 +263,19 @@ export class LoanController
                 });
             }
 
+            // Validate amount is positive
+            if (amount <= 0)
+            {
+                return res.status(400).json({ 
+                    message: 'Repayment amount must be greater than 0' 
+                });
+            }
+
             const pool = await dbSetUp();
 
-            // Verify loan exists and belongs to user
+            // Verify loan exists and belongs to customer
             const [loan] = await pool.query(
-                'SELECT id, outStandingBalance FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
+                'SELECT id, outStandingBalance, tenure_month FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
                 [loanId, userId]
             );
 
@@ -274,24 +287,49 @@ export class LoanController
             const currentLoan = (loan as any)[0];
 
             // Validate repayment amount
-            if (amount <= 0 || amount > currentLoan.outStandingBalance)
+            if (amount > currentLoan.outStandingBalance)
             {
                 return res.status(400).json({ 
-                    message: 'Repayment amount must be greater than 0 and less than or equal to outstanding balance' 
+                    message: `Repayment amount cannot exceed outstanding balance of ${currentLoan.outStandingBalance}` 
                 });
             }
 
-            // Process repayment
+            // Calculate new outstanding balance
             const newOutstandingBalance = currentLoan.outStandingBalance - amount;
 
+            // Create repayment record
+            const repaymentId = uuidv4();
+            const now = new Date();
+            const dueDate =  new Date(now)
+            dueDate.setMonth(dueDate.getMonth() + currentLoan.tenure_month);
+
+            await pool.query(
+                `INSERT INTO repayments (id, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)
+                VALUES (?, ?, ?, ?, ?, ?, 'completed')`,
+                [repaymentId, loanId, amount, now, newOutstandingBalance, dueDate]
+            );
+
+            // Update loan outstanding balance
             await pool.query(
                 'UPDATE loans SET outStandingBalance = ? WHERE id = ?',
                 [newOutstandingBalance, loanId]
             );
 
+            // If outstanding balance is 0, mark loan as completed
+            if (newOutstandingBalance === 0)
+            {
+                await pool.query(
+                    'UPDATE loans SET status = \'completed\' WHERE id = ?',
+                    [loanId]
+                );
+            }
+
             res.status(200).json({
                 message: 'Loan repayment processed successfully',
-                newOutstandingBalance: newOutstandingBalance
+                repaymentId: repaymentId,
+                amountPaid: amount,
+                newOutstandingBalance: newOutstandingBalance,
+                loanStatus: newOutstandingBalance === 0 ? 'completed' : 'active'
             });
         }
         catch (error)
@@ -299,6 +337,58 @@ export class LoanController
             console.error('RepayLoan error:', error);
 
             res.status(500).json({ message: 'could not process loan repayment', error: error });
+        }
+    }
+
+    async GetLoanRepaymentHistory(req: any, res: any)
+    {
+        try
+        {
+            const userId = req.user.id;
+            const loanId = req.params.id;
+
+            const pool = await dbSetUp();
+
+            const [loan] = await pool.query(
+                'SELECT id FROM loans WHERE id = ? AND customerId = ?',
+                [loanId, userId]
+            );
+
+            if (!Array.isArray(loan) || loan.length === 0)
+            {
+                return res.status(404).json({ message: 'Loan not found' });
+            }
+
+            // Get repayment history
+            const [repayments] = await pool.query(
+                `SELECT id, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status
+                FROM repayments
+                WHERE loanId = ?
+                ORDER BY paymentDate DESC`,
+                [loanId]
+            );
+
+            if (!Array.isArray(repayments) || repayments.length === 0)
+            {
+                return res.status(200).json({ 
+                    repaymentHistory: [],
+                    message: 'No repayment history found for this loan'
+                });
+            }
+
+            // console.log("")
+
+            res.status(200).json({
+                message: 'Repayment history retrieved successfully',
+                repaymentHistory: repayments
+            });
+            
+        }
+        catch(error)
+        {
+            console.error('GetLoanRepaymentHistory error:', error);
+
+            res.status(500).json({ message: 'could not get repayment history', error: error });
         }
     }
     
