@@ -46,104 +46,153 @@ async function createTables(pool: any)
 {
     try
     {
-        // customers table
+        // bank table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS customers (
+            CREATE TABLE IF NOT EXISTS bank (
                 id VARCHAR(36) PRIMARY KEY,
-                firstName VARCHAR(100) NOT NULL,
-                lastName VARCHAR(100) NOT NULL,
-                phoneNumber VARCHAR(20) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
-                income DECIMAL(12, 2) NOT NULL,
-                occupation VARCHAR(100),
-                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                bankName VARCHAR(255) NOT NULL,
+                licenseNumber VARCHAR(255) NOT NULL UNIQUE,
+                headOfficeAddress VARCHAR(255),
+                contactEmail VARCHAR(255),
+                contactPhone VARCHAR(255),
+                dateRegistered DATETIME DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(255) DEFAULT 'active'
             )        
         `);
+        console.log("✓ 'bank' table created or already exists");
 
-        console.log("✓ 'customers' table created or already exists");
-
-        // loan_officers table
+        // customer table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS loan_officers (
+            CREATE TABLE IF NOT EXISTS customer (
                 id VARCHAR(36) PRIMARY KEY,
-                firstName VARCHAR(100) NOT NULL,
-                lastName VARCHAR(100) NOT NULL,
-                email VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL,
+                bankId VARCHAR(36) NOT NULL,
+                firstName VARCHAR(255) NOT NULL,
+                lastName VARCHAR(255) NOT NULL,
+                phoneNumber VARCHAR(20),
+                email VARCHAR(255) NOT NULL UNIQUE,
+                passwordHash VARCHAR(255) NOT NULL,
+                income DECIMAL(12, 2),
+                occupation VARCHAR(255),
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (bankId) REFERENCES bank(id) ON DELETE CASCADE
             )        
         `);
+        console.log("✓ 'customer' table created or already exists");
 
-        console.log("✓ 'loan_officers' table created or already exists");
-
-        
-        // loan_types table
+        // loan_type table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS loan_types (
+            CREATE TABLE IF NOT EXISTS loan_type (
                 id VARCHAR(36) PRIMARY KEY,
-                name VARCHAR(100) NOT NULL,
-                description TEXT,
+                bankId VARCHAR(36) NOT NULL,
+                name VARCHAR(255) NOT NULL,
+                description VARCHAR(255),
                 interestRate DECIMAL(5, 2) NOT NULL,
                 minAmount DECIMAL(12, 2) NOT NULL,
                 maxAmount DECIMAL(12, 2) NOT NULL,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-                )            
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (bankId) REFERENCES bank(id) ON DELETE CASCADE
+            )            
         `);
-                
-        console.log("✓ 'loan_types' table created or already exists");
+        console.log("✓ 'loan_type' table created or already exists");
 
-        // loans table
+        // loan_officer table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS loans (
+            CREATE TABLE IF NOT EXISTS loan_officer (
+                id VARCHAR(36) PRIMARY KEY,
+                bankId VARCHAR(36) NOT NULL,
+                firstName VARCHAR(255) NOT NULL,
+                lastName VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL UNIQUE,
+                passwordHash VARCHAR(255) NOT NULL,
+                createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (bankId) REFERENCES bank(id) ON DELETE CASCADE
+            )        
+        `);
+        console.log("✓ 'loan_officer' table created or already exists");
+
+        // loan table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS loan (
                 id VARCHAR(36) PRIMARY KEY,
                 customerId VARCHAR(36) NOT NULL,
                 officerId VARCHAR(36),
                 loan_typeId VARCHAR(36) NOT NULL,
+                bankId VARCHAR(36) NOT NULL,
                 amount DECIMAL(12, 2) NOT NULL,
                 interestRate DECIMAL(5, 2) NOT NULL,
-                tenure_month INT NOT NULL,
-                applicationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                approvalDate TIMESTAMP,
+                tenureMonth INT NOT NULL,
+                applicationDate DATETIME DEFAULT CURRENT_TIMESTAMP,
+                approvalDate DATETIME,
+                disbursementDate DATETIME,
                 status ENUM('pending', 'approved', 'rejected', 'active', 'completed') DEFAULT 'pending',
                 outStandingBalance DECIMAL(12, 2) NOT NULL,
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (customerId) REFERENCES customers(id) ON DELETE CASCADE,
-                FOREIGN KEY (officerId) REFERENCES loan_officers(id) ON DELETE SET NULL,
-                FOREIGN KEY (loan_typeId) REFERENCES loan_types(id) ON DELETE CASCADE
+                FOREIGN KEY (customerId) REFERENCES customer(id) ON DELETE CASCADE,
+                FOREIGN KEY (officerId) REFERENCES loan_officer(id) ON DELETE SET NULL,
+                FOREIGN KEY (loan_typeId) REFERENCES loan_type(id) ON DELETE CASCADE,
+                FOREIGN KEY (bankId) REFERENCES bank(id) ON DELETE CASCADE
             )
         `);
+        console.log("✓ 'loan' table created or already exists");
 
-        console.log("✓ 'loans' table created or already exists");
-
-        // repayments table
+        // repayment table
         await pool.query(`
-            CREATE TABLE IF NOT EXISTS repayments (
+            CREATE TABLE IF NOT EXISTS repayment (
                 id VARCHAR(36) PRIMARY KEY,
                 loanId VARCHAR(36) NOT NULL,
                 amountPaid DECIMAL(12, 2) NOT NULL,
-                paymentDate TIMESTAMP,
+                paymentDate DATETIME DEFAULT CURRENT_TIMESTAMP,
                 remainingBalance DECIMAL(12, 2) NOT NULL,
-                dueDate TIMESTAMP NOT NULL,
-                status ENUM('pending', 'approved', 'completed', 'overdue') DEFAULT 'pending',
+                dueDate DATETIME,
+                status ENUM('pending', 'completed', 'overdue') DEFAULT 'pending',
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                FOREIGN KEY (loanId) REFERENCES loans(id) ON DELETE CASCADE
+                FOREIGN KEY (loanId) REFERENCES loan(id) ON DELETE CASCADE
             )
         `);
+        console.log("✓ 'repayment' table created or already exists");
 
-        console.log("✓ 'repayments' table created or already exists");
+        // wallet table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS wallet (
+                id VARCHAR(36) PRIMARY KEY,
+                bankId VARCHAR(36) NOT NULL,
+                customer_id VARCHAR(36) NOT NULL,
+                wallet_type VARCHAR(255) NOT NULL,
+                balance DECIMAL(12, 2) DEFAULT 0,
+                date_created DATETIME DEFAULT CURRENT_TIMESTAMP,
+                status VARCHAR(255) DEFAULT 'active',
+                FOREIGN KEY (bankId) REFERENCES bank(id) ON DELETE CASCADE,
+                FOREIGN KEY (customer_id) REFERENCES customer(id) ON DELETE CASCADE
+            )
+        `);
+        console.log("✓ 'wallet' table created or already exists");
+
+        // wallet_transaction table
+        await pool.query(`
+            CREATE TABLE IF NOT EXISTS wallet_transaction (
+                id VARCHAR(36) PRIMARY KEY,
+                wallet_id VARCHAR(36) NOT NULL,
+                amount DECIMAL(12, 2) NOT NULL,
+                transaction_type VARCHAR(255) NOT NULL,
+                reference VARCHAR(255),
+                description VARCHAR(255),
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (wallet_id) REFERENCES wallet(id) ON DELETE CASCADE
+            )
+        `);
+        console.log("✓ 'wallet_transaction' table created or already exists");
 
         console.log("\n============================================================================");
-        console.log("=-=-=-=-=-=✓ All tables exists or has been created successfully-=-=-=-=-=-=");
+        console.log("=-=-=-=-=-=✓ All tables created successfully=-=-=-=-=-=");
         console.log("============================================================================\n");
     }
     catch (error)
     {
         console.error("✗ Error creating tables:", error);
     }
-} 
+}

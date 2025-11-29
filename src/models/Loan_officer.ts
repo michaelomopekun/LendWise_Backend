@@ -1,11 +1,12 @@
 
 export interface Loan_officer
 {
-    id: number;
+    id: string;
+    bankId: string;
     firstName: string;
     lastName: string;
     email: string;
-    password_hash: string;
+    passwordHash: string;
     createdAt: Date;
     updatedAt: Date;
 }

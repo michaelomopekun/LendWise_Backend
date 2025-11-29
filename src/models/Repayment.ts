@@ -1,7 +1,7 @@
 export interface Repayment 
 {
-    Id: number;
-    loanId: number;
+    id: string;
+    loanId: string;
     amountPaid: number;
     paymentDate: Date;
     remainingBalance: number;

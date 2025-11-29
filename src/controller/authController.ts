@@ -41,7 +41,7 @@ export class AuthController
 
             // Create customer
             const [result] = await pool.query(
-                `INSERT INTO customers (id, firstName, lastName, email, phoneNumber, password_hash, income, occupation) 
+                `INSERT INTO customers (id, firstName, lastName, email, phoneNumber, passwordHash, income, occupation) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [customerId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
             );
@@ -86,7 +86,7 @@ export class AuthController
 
             // Find customer
             const [customer] = await pool.query(
-                'SELECT id, firstName, lastName, email, password_hash FROM customers WHERE email = ?',
+                'SELECT id, firstName, lastName, email, passwordHash FROM customers WHERE email = ?',
                 [email]
             );
 
@@ -98,7 +98,7 @@ export class AuthController
             const user = customer[0] as any;
 
             // Compare password
-            const isPasswordValid = await comparePassword(password, user.password_hash);
+            const isPasswordValid = await comparePassword(password, user.passwordHash);
 
             if (!isPasswordValid) 
             {
@@ -144,7 +144,7 @@ export class AuthController
 
             // Find officer
             const [officer] = await pool.query(
-                'SELECT id, firstName, lastName, email, password_hash FROM loan_officers WHERE email = ?',
+                'SELECT id, firstName, lastName, email, passwordHash FROM loan_officers WHERE email = ?',
                 [email]
             );
 
@@ -156,7 +156,7 @@ export class AuthController
             const user = officer[0] as any;
 
             // Compare password
-            const isPasswordValid = await comparePassword(password, user.password_hash);
+            const isPasswordValid = await comparePassword(password, user.passwordHash);
 
             if (!isPasswordValid) 
             {

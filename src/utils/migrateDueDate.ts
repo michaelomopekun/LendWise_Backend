@@ -20,10 +20,10 @@ export async function migrateDueDate() {
             console.log("✓ dueDate column already exists");
         }
 
-        // Step 2: Update existing loans to calculate dueDate based on applicationDate + tenure_month
+        // Step 2: Update existing loans to calculate dueDate based on applicationDate + tenureMonth
         await pool.query(
             `UPDATE loans 
-             SET dueDate = DATE_ADD(applicationDate, INTERVAL tenure_month MONTH)
+             SET dueDate = DATE_ADD(applicationDate, INTERVAL tenureMonth MONTH)
              WHERE dueDate IS NULL AND applicationDate IS NOT NULL`
         );
         console.log("✓ dueDate populated for existing loans");
@@ -31,7 +31,7 @@ export async function migrateDueDate() {
         // Step 3: Set dueDate for loans without applicationDate (fallback to createdAt)
         await pool.query(
             `UPDATE loans 
-             SET dueDate = DATE_ADD(createdAt, INTERVAL tenure_month MONTH)
+             SET dueDate = DATE_ADD(createdAt, INTERVAL tenureMonth MONTH)
              WHERE dueDate IS NULL`
         );
         console.log("✓ Migration completed successfully");

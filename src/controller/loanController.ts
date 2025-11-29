@@ -15,7 +15,7 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [loan] = await pool.query(
-                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outstandingBalance, l.customerId
+                `SELECT l.id, l.amount, l.tenureMonth, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outstandingBalance, l.customerId
                  FROM loans l
                  JOIN loan_types lt ON l.loan_typeId = lt.id
                  WHERE l.id = ? AND l.customerId = ?`,
@@ -101,7 +101,7 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [loans] = await pool.query(
-                `SELECT l.id, l.amount, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outStandingBalance, l.dueDate, l.applicationDate
+                `SELECT l.id, l.amount, l.tenureMonth, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outStandingBalance, l.dueDate, l.applicationDate
                  FROM loans l
                  JOIN loan_types lt ON l.loan_typeId = lt.id
                  WHERE l.customerId = ?
@@ -190,7 +190,7 @@ export class LoanController
 
 
             await pool.query(
-                `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance, dueDate)
+                `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenureMonth, status, outStandingBalance, dueDate)
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
                 [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
             );
@@ -225,7 +225,7 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [activeLoans] = await pool.query(
-                `SELECT l.id, l.amount, l.outStandingBalance, l.tenure_month, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate
+                `SELECT l.id, l.amount, l.outStandingBalance, l.tenureMonth, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate
                     FROM loans l
                     JOIN loan_types lt ON l.loan_typeId = lt.id
                     WHERE l.customerId = ? AND l.status = 'active'`,
@@ -275,7 +275,7 @@ export class LoanController
 
             // Verify loan exists and belongs to customer
             const [loan] = await pool.query(
-                'SELECT id, outStandingBalance, tenure_month FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
+                'SELECT id, outStandingBalance, tenureMonth FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
                 [loanId, userId]
             );
 
@@ -301,7 +301,7 @@ export class LoanController
             const repaymentId = uuidv4();
             const now = new Date();
             const dueDate =  new Date(now)
-            dueDate.setMonth(dueDate.getMonth() + currentLoan.tenure_month);
+            dueDate.setMonth(dueDate.getMonth() + currentLoan.tenureMonth);
 
             await pool.query(
                 `INSERT INTO repayments (id, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)

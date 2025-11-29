@@ -66,7 +66,7 @@
  *                       amount:
  *                         type: number
  *                         example: 50000
- *                       tenure_month:
+ *                       tenureMonth:
  *                         type: integer
  *                         example: 12
  *                       status:
@@ -136,7 +136,7 @@
  *                     amount:
  *                       type: number
  *                       example: 50000
- *                     tenure_month:
+ *                     tenureMonth:
  *                       type: integer
  *                       example: 12
  *                     status:
@@ -270,7 +270,7 @@
  *                       outStandingBalance:
  *                         type: number
  *                         example: 10000
- *                       tenure_month:
+ *                       tenureMonth:
  *                         type: integer
  *                         example: 12
  *                       status:

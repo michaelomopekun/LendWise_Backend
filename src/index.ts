@@ -4,7 +4,7 @@ import {dbSetUp} from "./db/database"
 import dotenv from "dotenv";
 import router from "./routes/routes";
 import { swaggerDocs } from "./docs/swagger";
-import { migrateDueDate } from "./utils/migrateDueDate";
+// import { migrateDueDate } from "./utils/migrateDueDate";
 // import { seedLoans } from "./utils/ge";
 
 

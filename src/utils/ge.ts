@@ -102,7 +102,7 @@
 //         for (const loan of loans) {
 //             const loanId = uuidv4();
 //             await pool.query(
-//                 `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenure_month, status, outStandingBalance, applicationDate, approvalDate)
+//                 `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenureMonth, status, outStandingBalance, applicationDate, approvalDate)
 //                  VALUES (?, ?, ?, ?, ?, ?, 'active', ?, NOW(), NOW())`,
 //                 [loanId, customerId, loan.loanTypeId, loan.amount, loan.interestRate, loan.tenureMonth, loan.outStandingBalance]
 //             );

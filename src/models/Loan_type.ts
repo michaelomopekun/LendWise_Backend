@@ -1,7 +1,8 @@
 
 export interface Loan_type
 {
-    id: number;
+    id: string;
+    bankId: string;
     name: string;
     description: string;
     interestRate: number;
