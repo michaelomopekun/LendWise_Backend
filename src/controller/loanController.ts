@@ -1,5 +1,6 @@
 import { dbSetUp } from "../db/database";
 import { v4 as uuidv4 } from 'uuid';
+import { Loan } from "../models/Loan";
 
 
 export class LoanController
@@ -129,10 +130,10 @@ export class LoanController
         try
         {
             const customerId = req.user.id;
-            const { loanTypeId, amount, tenureMonth } = req.body;
+            const { loan_typeId, amount, tenureMonth, bankId, }:Loan = req.body;
 
             // Validate input
-            if (!loanTypeId || !amount || !tenureMonth)
+            if (!loan_typeId || !amount || !tenureMonth || !bankId)
             {
                 return res.status(400).json({ 
                     message: 'Missing required fields: loanTypeId, amount, tenureMonth' 
@@ -152,7 +153,7 @@ export class LoanController
             // Get loan type with interest rate
             const [loanType] = await pool.query(
                 'SELECT id, name, interestRate, minAmount, maxAmount FROM loan_types WHERE id = ?',
-                [loanTypeId]
+                [loan_typeId]
             );
 
             if (!Array.isArray(loanType) || loanType.length === 0)
@@ -192,7 +193,7 @@ export class LoanController
             await pool.query(
                 `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenureMonth, status, outStandingBalance, dueDate)
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-                [loanId, customerId, loanTypeId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
+                [loanId, customerId, loan_typeId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
             );
 
             res.status(201).json({

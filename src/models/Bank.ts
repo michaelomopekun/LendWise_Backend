@@ -7,6 +7,7 @@ export interface Bank
     headOfficeAddress: string;
     contactEmail: string;
     contactPhone: string;
+    passwordHash: string;
     dateRegistered: Date;
     status: string;
 }

@@ -3,6 +3,7 @@ import {dbSetUp} from '../db/database';
 import { v4 as uuidv4 } from 'uuid';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateToken } from '../utils/jwt';
+import { Bank } from '../models/Bank';
 
 
 export class AuthController
@@ -185,4 +186,65 @@ export class AuthController
         }
     }
 
+
+    // async RegisterBank(req: Request, res: Response)
+    // {
+    //     try
+    //     {
+    //         const { bankName, licenseNumber, headOfficeAddress, contactEmail, contactPhone, passwordHash } :Bank = req.body;
+
+    //         // Validate input
+    //         if (!bankName || !licenseNumber || !headOfficeAddress || !contactEmail || !contactPhone || !passwordHash) 
+    //         {
+    //             return res.status(400).json({ message: 'Missing required fields' });
+    //         }
+
+    //         // Check if email already exists
+    //         const pool = await dbSetUp();
+            
+    //         const [existingUser] = await pool.query(
+    //             'SELECT id FROM bank WHERE contactEmail = ?',
+    //             [contactEmail]
+    //         );
+
+    //         if (Array.isArray(existingUser) && existingUser.length > 0) 
+    //         {
+    //             return res.status(409).json({ message: 'Email already registered' });
+    //         }
+
+    //         // Hash password
+    //         const hashedPassword = await hashPassword(password);
+
+    //         //generate user id
+    //         const customerId = uuidv4();
+
+    //         // Create customer
+    //         const [result] = await pool.query(
+    //             `INSERT INTO customers (id, firstName, lastName, email, phoneNumber, passwordHash, income, occupation) 
+    //             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    //             [customerId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
+    //         );
+
+
+    //         // Generate token
+    //         const token = generateToken({ id: customerId, email, role: 'customer'});
+
+    //         res.status(201).json({
+    //             message: 'Registration successful',
+    //             token,
+    //             user: {
+    //                 id: customerId,
+    //                 firstName,
+    //                 lastName,
+    //                 email
+    //             }
+    //         });
+    //     }
+    //     catch (error)
+    //     {
+    //         console.error('Registration error:', error);
+
+    //         res.status(500).json({ message: 'Server error', error: error });
+    //     }
+    // }
 }
