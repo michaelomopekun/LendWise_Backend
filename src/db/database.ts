@@ -37,7 +37,7 @@ export async function dbSetUp()
         queueLimit: 0
     });
 
-    await createTables(pool);
+    // await createTables(pool);
 
     return pool;
 }

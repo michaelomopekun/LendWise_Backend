@@ -415,3 +415,139 @@
  *       500:
  *         description: Could not get loan repayment history
  */
+
+/**
+ * @swagger
+ * /api/loans/types:
+ *   get:
+ *     summary: Get loan types by bank ID
+ *     description: Retrieve all loan types offered by a specific bank including interest rates, minimum and maximum amounts
+ *     tags:
+ *       - Loan Types
+ *     responses:
+ *       200:
+ *         description: Loan types retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 loanTypes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         example: "550e8400-e29b-41d4-a716-446655440100"
+ *                       bankId:
+ *                         type: string
+ *                         example: "550e8400-e29b-41d4-a716-446655440030"
+ *                       name:
+ *                         type: string
+ *                         example: "Personal Loan"
+ *                       interestRate:
+ *                         type: number
+ *                         example: 5.5
+ *                         description: Annual interest rate percentage
+ *                       minAmount:
+ *                         type: number
+ *                         example: 10000
+ *                         description: Minimum loan amount
+ *                       maxAmount:
+ *                         type: number
+ *                         example: 500000
+ *                         description: Maximum loan amount
+ *       500:
+ *         description: Could not get loan types
+ */
+
+/**
+ * @swagger
+ * /api/loans/types:
+ *   post:
+ *     summary: Create a new loan type
+ *     description: Create a new loan type for a bank with specified interest rate, amount limits, and description. This endpoint is typically used by banks to define their loan products.
+ *     tags:
+ *       - Loan Types
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - bankId
+ *               - name
+ *               - interestRate
+ *               - minAmount
+ *               - maxAmount
+ *             properties:
+ *               bankId:
+ *                 type: string
+ *                 description: UUID of the bank offering this loan type
+ *                 example: "550e8400-e29b-41d4-a716-446655440030"
+ *               name:
+ *                 type: string
+ *                 description: Name of the loan type
+ *                 example: "Personal Loan"
+ *               interestRate:
+ *                 type: number
+ *                 description: Annual interest rate percentage
+ *                 example: 5.5
+ *                 minimum: 0
+ *               description:
+ *                 type: string
+ *                 description: Detailed description of the loan type
+ *                 example: "A flexible personal loan for various needs with competitive interest rates"
+ *               minAmount:
+ *                 type: number
+ *                 description: Minimum loan amount that can be requested
+ *                 example: 10000
+ *                 minimum: 0
+ *               maxAmount:
+ *                 type: number
+ *                 description: Maximum loan amount that can be requested
+ *                 example: 500000
+ *                 minimum: 0
+ *     responses:
+ *       201:
+ *         description: Loan type created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan type created successfully"
+ *                 loanType:
+ *                   type: object
+ *                   description: Database result object containing information about the created loan type
+ *       400:
+ *         description: Invalid input - missing required fields or invalid values
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Missing required fields"
+ *       401:
+ *         description: Unauthorized - No token provided or invalid token
+ *       500:
+ *         description: Could not create loan type
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "could not create loan type"
+ *                 error:
+ *                   type: object
+ */

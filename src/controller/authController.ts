@@ -59,7 +59,7 @@ export class AuthController
             );
 
             // Generate token
-            const token = generateToken({ id: customerId, email, role: 'customer'});
+            const token = generateToken({ id: customerId, email, role: 'customer', bankId});
 
             res.status(201).json({
                 message: 'Registration successful',
@@ -121,7 +121,7 @@ export class AuthController
             }
 
             // Generate token
-            const token = generateToken({ id: user.id, email: user.email, role: 'customer' });
+            const token = generateToken({ id: user.id, email: user.email, role: 'customer', bankId: user.bankId});
 
             res.status(200).json({
                 message: 'Login successful',
@@ -180,7 +180,7 @@ export class AuthController
             }
 
             // Generate token
-            const token = generateToken({ id: bankData.id, email: bankData.contactEmail, role: 'bank' });
+            const token = generateToken({ id: bankData.id, email: bankData.contactEmail, role: 'bank', bankId: bankData.bankId });
 
             res.status(200).json({
                 message: 'Login successful',
@@ -244,7 +244,7 @@ export class AuthController
             );
 
             // Generate token
-            const token = generateToken({ id: bankId, email: contactEmail, role: 'bank'});
+            const token = generateToken({ id: bankId, email: contactEmail, role: 'bank', bankId: bankId});
 
             res.status(201).json({
                 message: 'Registration successful',
