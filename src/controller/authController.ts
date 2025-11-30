@@ -129,35 +129,35 @@ export class AuthController
     }
 
 
-    async OfficerLogin(req: Request, res: Response)
+    async BankLogin(req: Request, res: Response)
     {
         try
         {
-            const { email, password } = req.body;
+            const { contactEmail, passwordHash } = req.body;
 
             // Validate input
-            if (!email || !password) 
+            if (!contactEmail || !passwordHash) 
             {
                 return res.status(400).json({ message: 'Email and password required' });
             }
 
             const pool = await dbSetUp();
 
-            // Find officer
-            const [officer] = await pool.query(
-                'SELECT id, firstName, lastName, email, passwordHash FROM loan_officers WHERE email = ?',
-                [email]
+            // Find bank
+            const [bank] = await pool.query(
+                'SELECT id, bankName, contactEmail, contactPhone, passwordHash FROM banks WHERE contactEmail = ?',
+                [contactEmail]
             );
 
-            if (!Array.isArray(officer) || officer.length === 0) 
+            if (!Array.isArray(bank) || bank.length === 0) 
             {
                 return res.status(401).json({ message: 'Invalid email or password' });
             }
 
-            const user = officer[0] as any;
+            const bankData = bank[0] as any;
 
             // Compare password
-            const isPasswordValid = await comparePassword(password, user.passwordHash);
+            const isPasswordValid = await comparePassword(passwordHash, bankData.passwordHash);
 
             if (!isPasswordValid) 
             {
@@ -165,16 +165,16 @@ export class AuthController
             }
 
             // Generate token
-            const token = generateToken({ id: user.id, email: user.email, role: 'officer' });
+            const token = generateToken({ id: bankData.id, email: bankData.contactEmail, role: 'bank' });
 
             res.status(200).json({
                 message: 'Login successful',
                 token,
-                user: {
-                    id: user.id,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    email: user.email
+                bank: {
+                    id: bankData.id,
+                    bankName: bankData.bankName,
+                    contactEmail: bankData.contactEmail,
+                    contactPhone: bankData.contactPhone
                 }
             });
         }
@@ -187,64 +187,70 @@ export class AuthController
     }
 
 
-    // async RegisterBank(req: Request, res: Response)
-    // {
-    //     try
-    //     {
-    //         const { bankName, licenseNumber, headOfficeAddress, contactEmail, contactPhone, passwordHash } :Bank = req.body;
+    async RegisterBank(req: Request, res: Response)
+    {
+        try
+        {
+            const { bankName, licenseNumber, headOfficeAddress, contactEmail, contactPhone, passwordHash} :Bank = req.body;
 
-    //         // Validate input
-    //         if (!bankName || !licenseNumber || !headOfficeAddress || !contactEmail || !contactPhone || !passwordHash) 
-    //         {
-    //             return res.status(400).json({ message: 'Missing required fields' });
-    //         }
+            // Validate input
+            if (!bankName || !licenseNumber || !headOfficeAddress || !contactEmail || !contactPhone || !passwordHash) 
+            {
+                return res.status(400).json({ message: 'Missing required fields' });
+            }
 
-    //         // Check if email already exists
-    //         const pool = await dbSetUp();
+            // Check if email already exists
+            const pool = await dbSetUp();
             
-    //         const [existingUser] = await pool.query(
-    //             'SELECT id FROM bank WHERE contactEmail = ?',
-    //             [contactEmail]
-    //         );
+            const [existingUser] = await pool.query(
+                'SELECT id FROM banks WHERE contactEmail = ?',
+                [contactEmail]
+            );
 
-    //         if (Array.isArray(existingUser) && existingUser.length > 0) 
-    //         {
-    //             return res.status(409).json({ message: 'Email already registered' });
-    //         }
+            if (Array.isArray(existingUser) && existingUser.length > 0) 
+            {
+                return res.status(409).json({ message: 'Email already registered' });
+            }
 
-    //         // Hash password
-    //         const hashedPassword = await hashPassword(password);
+            // Hash password
+            const hashedPassword = await hashPassword(passwordHash);
 
-    //         //generate user id
-    //         const customerId = uuidv4();
+            //generate user id
+            const bankId = uuidv4();
 
-    //         // Create customer
-    //         const [result] = await pool.query(
-    //             `INSERT INTO customers (id, firstName, lastName, email, phoneNumber, passwordHash, income, occupation) 
-    //             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    //             [customerId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
-    //         );
+            //
+            const dateRegistered = Date.now()
 
+            // Create customer
+            const [result] = await pool.query(
+                `INSERT INTO banks (id, bankName, contactEmail, contactPhone, passwordHash, licenseNumber, headOfficeAddress, status) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                [bankId, bankName, contactEmail, contactPhone, hashedPassword,licenseNumber, headOfficeAddress, 'active' ]
+            );
 
-    //         // Generate token
-    //         const token = generateToken({ id: customerId, email, role: 'customer'});
+            // Generate token
+            const token = generateToken({ id: bankId, email: contactEmail, role: 'bank'});
 
-    //         res.status(201).json({
-    //             message: 'Registration successful',
-    //             token,
-    //             user: {
-    //                 id: customerId,
-    //                 firstName,
-    //                 lastName,
-    //                 email
-    //             }
-    //         });
-    //     }
-    //     catch (error)
-    //     {
-    //         console.error('Registration error:', error);
+            res.status(201).json({
+                message: 'Registration successful',
+                token,
+                bank: {
+                    id: bankId,
+                    bankName,
+                    licenseNumber,
+                    headOfficeAddress,
+                    contactEmail,
+                    contactPhone,
+                    dateRegistered,
+                    status: 'active'
+                }
+            });
+        }
+        catch (error)
+        {
+            console.error('Registration error:', error);
 
-    //         res.status(500).json({ message: 'Server error', error: error });
-    //     }
-    // }
+            res.status(500).json({ message: 'Server error', error: error });
+        }
+    }
 }

@@ -192,12 +192,13 @@
  *                   type: object
  */
 
+
 /**
  * @swagger
- * /api/auth/officer-login:
+ * /api/auth/bankRegister:
  *   post:
- *     summary: Login a loan officer
- *     description: Authenticate a loan officer with email and password
+ *     summary: Register a new bank
+ *     description: Create a new bank account with institutional and contact information
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -207,20 +208,137 @@
  *           schema:
  *             type: object
  *             required:
- *               - email
- *               - password
+ *               - bankName
+ *               - licenseNumber
+ *               - headOfficeAddress
+ *               - contactEmail
+ *               - contactPhone
+ *               - passwordHash
  *             properties:
- *               email:
+ *               bankName:
+ *                 type: string
+ *                 example: "First National Bank"
+ *               licenseNumber:
+ *                 type: string
+ *                 example: "BNK-2024-001234"
+ *               headOfficeAddress:
+ *                 type: string
+ *                 example: "123 Banking Street, Lagos, Nigeria"
+ *               contactEmail:
  *                 type: string
  *                 format: email
- *                 example: "officer@lendwise.com"
- *               password:
+ *                 example: "contact@firstnationalbank.com"
+ *               contactPhone:
+ *                 type: string
+ *                 example: "08012345678"
+ *               passwordHash:
  *                 type: string
  *                 format: password
- *                 example: "OfficerPass123"
+ *                 example: "SecureBankPass123"
+ *     responses:
+ *       201:
+ *         description: Bank registration successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Registration successful"
+ *                 token:
+ *                   type: string
+ *                   example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+ *                 bank:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       example: "550e8400-e29b-41d4-a716-446655440002"
+ *                     bankName:
+ *                       type: string
+ *                       example: "First National Bank"
+ *                     licenseNumber:
+ *                       type: string
+ *                       example: "BNK-2024-001234"
+ *                     headOfficeAddress:
+ *                       type: string
+ *                       example: "123 Banking Street, Lagos, Nigeria"
+ *                     contactEmail:
+ *                       type: string
+ *                       example: "contact@firstnationalbank.com"
+ *                     contactPhone:
+ *                       type: string
+ *                       example: "08012345678"
+ *                     dateRegistered:
+ *                       type: number
+ *                       example: 1701360000000
+ *                     status:
+ *                       type: string
+ *                       example: "active"
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Missing required fields"
+ *       409:
+ *         description: Email already registered
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Email already registered"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Server error"
+ *                 error:
+ *                   type: object
+ */
+
+/**
+ * @swagger
+ * /api/auth/bankLogin:
+ *   post:
+ *     summary: Login a bank
+ *     description: Authenticate a bank with contact email and password
+ *     tags:
+ *       - Authentication
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - contactEmail
+ *               - passwordHash
+ *             properties:
+ *               contactEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: "contact@firstnationalbank.com"
+ *               passwordHash:
+ *                 type: string
+ *                 format: password
+ *                 example: "SecureBankPass123"
  *     responses:
  *       200:
- *         description: Officer login successful
+ *         description: Bank login successful
  *         content:
  *           application/json:
  *             schema:
@@ -237,16 +355,16 @@
  *                   properties:
  *                     id:
  *                       type: string
- *                       example: "550e8400-e29b-41d4-a716-446655440001"
- *                     firstName:
+ *                       example: "550e8400-e29b-41d4-a716-446655440002"
+ *                     bankName:
  *                       type: string
- *                       example: "Jane"
- *                     lastName:
+ *                       example: "First National Bank"
+ *                     contactEmail:
  *                       type: string
- *                       example: "Smith"
- *                     email:
+ *                       example: "contact@firstnationalbank.com"
+ *                     contactPhone:
  *                       type: string
- *                       example: "officer@lendwise.com"
+ *                       example: "08012345678"
  *       400:
  *         description: Email and password required
  *         content:

@@ -3,19 +3,35 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
-const JWT_EXPIRY = process.env.JWT_EXPIRY || "";
+const JWT_SECRET = process.env.JWT_SECRET ;
+const JWT_EXPIRY = process.env.JWT_EXPIRY || "7d";
+
+// Validate required env variables
+if (!JWT_SECRET || !JWT_SECRET) 
+{
+    throw new Error('JWT_SECRET environment variable is required');
+}
 
 export interface JwtPayload 
 {
     id: string;
     email: string;
-    role: 'customer' | 'officer';
+    role: 'customer' | 'bank';
 }
 
+
 export const generateToken = (payload: JwtPayload): string => {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    try 
+    {
+        return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+    } 
+    catch (error) 
+    {
+        console.error('Token generation error:', error);
+        throw new Error('Failed to generate authentication token');
+    }
 };
+
 
 export const verifyToken = (token: string): JwtPayload => {
     try 

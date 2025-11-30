@@ -18,7 +18,9 @@ const customerController = new CustomerController();
 // Authentication routes
 router.post('/auth/register', authController.Register.bind(authController));
 router.post('/auth/login', authController.Login.bind(authController));
-router.post('/auth/officer-login', authController.OfficerLogin.bind(authController));
+router.post('/auth/bankLogin', authController.BankLogin.bind(authController));
+router.post('/auth/bankRegister', authController.RegisterBank.bind(authController));
+
 
 // loan routes
 protectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
