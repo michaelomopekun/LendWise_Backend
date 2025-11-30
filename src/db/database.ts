@@ -163,7 +163,7 @@ async function createTables(pool: any)
             CREATE TABLE IF NOT EXISTS wallets (
                 id VARCHAR(36) PRIMARY KEY,
                 bankId VARCHAR(36) NOT NULL,
-                customer_id VARCHAR(36) NOT NULL,
+                customer_id VARCHAR(36) NULL,
                 wallet_type VARCHAR(255) NOT NULL,
                 balance DECIMAL(12, 2) DEFAULT 0,
                 date_created DATETIME DEFAULT CURRENT_TIMESTAMP,

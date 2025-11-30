@@ -25,14 +25,18 @@ export class LoanController
 
             if (!Array.isArray(loan) || loan.length === 0) 
             {
+                console.log("❌ GetLoanDetails: Loan not found")
+
                 return res.status(404).json({ message: 'Loan not found' });
             }
+
+            console.log("✅ GetLoanDetails: Loan details retrieved successfully")
 
             res.status(200).json({ loan: loan[0] });
         }
         catch (error)
         {
-            console.error('GetLoanDetails error:', error);
+            console.error('❌ GetLoanDetails error:', error);
 
             res.status(500).json({ message: 'could not get loan details', error: error });
         }
@@ -80,6 +84,8 @@ export class LoanController
                 nextRepayment: (nextRepayment as any)[0]?.nextRepaymentAmount || 0
             };
 
+            console.log("✅ LoanSummary: Loan summary retrieved successfully")
+
             res.status(200).json({
                 message: 'Loan summary retrieved successfully',
                 data: summary
@@ -87,7 +93,7 @@ export class LoanController
         }
         catch (error)
         {
-            console.error('LoanSummary error:', error);
+            console.error('❌ LoanSummary error:', error);
 
             res.status(500).json({ message: 'could not get loan summary', error: error });
         }
@@ -112,14 +118,18 @@ export class LoanController
 
             if (!Array.isArray(loans) || loans.length === 0) 
             {
+                console.log("🪹 GetAllLoans: No loans found")
+
                 return res.status(200).json({ loans: loans });
             }
+
+            console.log("✅ GetAllLoans: Loans retrieved successfully")
 
             res.status(200).json({ loans: loans });
         }
         catch (error)
         {
-            console.error('GetAllLoans error:', error);
+            console.error('❌ GetAllLoans error:', error);
 
             res.status(500).json({ message: 'could not get loans', error: error });
         }
@@ -136,7 +146,7 @@ export class LoanController
             // Validate input
             if (!loan_typeId || !amount || !tenureMonth)
             {
-                console.log('Missing required fields: loanTypeId, amount, tenureMonth');
+                console.log('❌ RequestLoan: Missing required fields: loanTypeId, amount, tenureMonth');
 
                 return res.status(400).json({ 
                     message: 'Missing required fields: loanTypeId, amount, tenureMonth' 
@@ -146,6 +156,8 @@ export class LoanController
             // Validate amount and tenure are positive
             if (amount <= 0 || tenureMonth <= 0)
             {
+                console.log("❌ RequestLoan: Amount and tenure must be greater than 0")
+
                 return res.status(400).json({ 
                     message: 'Amount and tenure must be greater than 0' 
                 });
@@ -161,6 +173,8 @@ export class LoanController
 
             if (!Array.isArray(loanType) || loanType.length === 0)
             {
+                console.log("❌ RequestLoan: Loan type not found")
+
                 return res.status(404).json({ message: 'Loan type not found' });
             }
 
@@ -169,6 +183,8 @@ export class LoanController
             // Validate amount is within loan type limits
             if (amount < type.minAmount || amount > type.maxAmount)
             {
+                console.log("❌ RequestLoan: Amount must be between minAmount and maxAmount for a loan type")
+
                 return res.status(400).json({ 
                     message: `Amount must be between ${type.minAmount} and ${type.maxAmount} for a ${type.name}` 
                 });
@@ -182,6 +198,8 @@ export class LoanController
 
             if (!Array.isArray(customer) || customer.length === 0)
             {
+                console.log("❌ RequestLoan: Customer not found")
+
                 return res.status(404).json({ message: 'Customer not found' });
             }
 
@@ -199,6 +217,8 @@ export class LoanController
                 [loanId, customerId, loan_typeId, bankId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
             );
 
+            console.log("✅ RequestLoan: Loan request submitted successfully")
+
             res.status(201).json({
                 message: 'Loan request submitted successfully',
                 loan: {
@@ -214,7 +234,7 @@ export class LoanController
         }
         catch (error)
         {
-            console.error('RequestLoan error:', error);
+            console.error('❌ RequestLoan error:', error);
 
             res.status(500).json({ message: 'could not request loan', error: error });
         }
@@ -241,11 +261,13 @@ export class LoanController
             //     return res.status(200).json({ activeLoans: activeLoans });
             // }
 
+            console.log("✅ GetActiveLoans: Active loans retrieved successfully")
+
             res.status(200).json({ activeLoans: activeLoans });
         }
         catch (error)
         {
-            console.error('GetActiveLoans error:', error);
+            console.error('❌ GetActiveLoans error:', error);
 
             res.status(500).json({ message: 'could not retrieve active loans', error: error });
         }
@@ -257,11 +279,14 @@ export class LoanController
         try
         {
             const userId = req.user.id;
+            const bankId = req.user.bankId;
             const { loanId, amount } = req.body;
 
             // Validate input
             if (!loanId || !amount)
             {
+                console.log("❌ RepayLoan: Missing required fields: loanId, amount")
+
                 return res.status(400).json({ 
                     message: 'Missing required fields: loanId, amount' 
                 });
@@ -270,6 +295,8 @@ export class LoanController
             // Validate amount is positive
             if (amount <= 0)
             {
+                console.log("❌ RepayLoan: Repayment amount must be greater than 0")
+
                 return res.status(400).json({ 
                     message: 'Repayment amount must be greater than 0' 
                 });
@@ -279,12 +306,14 @@ export class LoanController
 
             // Verify loan exists and belongs to customer
             const [loan] = await pool.query(
-                'SELECT id, outStandingBalance, tenureMonth FROM loans WHERE id = ? AND customerId = ? AND status = \'active\'',
-                [loanId, userId]
+                'SELECT id, outStandingBalance, tenureMonth FROM loans WHERE id = ? AND customerId = ? AND status = \'active\' AND bankId = ?',
+                [loanId, userId, bankId]
             );
 
             if (!Array.isArray(loan) || loan.length === 0)
             {
+                console.log("❌ RepayLoan: Active loan not found")
+
                 return res.status(404).json({ message: 'Active loan not found' });
             }
 
@@ -293,6 +322,8 @@ export class LoanController
             // Validate repayment amount
             if (amount > currentLoan.outStandingBalance)
             {
+                console.log(`❌ RepayLoan: Repayment amount cannot exceed outstanding balance of ${currentLoan.outStandingBalance}`)
+
                 return res.status(400).json({ 
                     message: `Repayment amount cannot exceed outstanding balance of ${currentLoan.outStandingBalance}` 
                 });
@@ -308,29 +339,32 @@ export class LoanController
             dueDate.setMonth(dueDate.getMonth() + currentLoan.tenureMonth);
 
             await pool.query(
-                `INSERT INTO repayments (id, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)
+                `INSERT INTO repayments (id, bankId, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)
                 VALUES (?, ?, ?, ?, ?, ?, 'completed')`,
-                [repaymentId, loanId, amount, now, newOutstandingBalance, dueDate]
+                [repaymentId, bankId, loanId, amount, now, newOutstandingBalance, dueDate]
             );
 
             // Update loan outstanding balance
             await pool.query(
-                'UPDATE loans SET outStandingBalance = ? WHERE id = ?',
-                [newOutstandingBalance, loanId]
+                'UPDATE loans SET outStandingBalance = ? WHERE id = ? AND bankId = ?',
+                [newOutstandingBalance, loanId, bankId]
             );
 
             // If outstanding balance is 0, mark loan as completed
             if (newOutstandingBalance === 0)
             {
                 await pool.query(
-                    'UPDATE loans SET status = \'completed\' WHERE id = ?',
-                    [loanId]
+                    'UPDATE loans SET status = \'completed\' WHERE id = ? AND bankId = ?',
+                    [loanId, bankId]
                 );
             }
+
+            console.log("✅ RepayLoan: Loan repayment processed successfully")
 
             res.status(200).json({
                 message: 'Loan repayment processed successfully',
                 repaymentId: repaymentId,
+                bankId: bankId,
                 amountPaid: amount,
                 newOutstandingBalance: newOutstandingBalance,
                 loanStatus: newOutstandingBalance === 0 ? 'completed' : 'active'
@@ -338,7 +372,7 @@ export class LoanController
         }
         catch (error)
         {
-            console.error('RepayLoan error:', error);
+            console.error('❌RepayLoan error:', error);
 
             res.status(500).json({ message: 'could not process loan repayment', error: error });
         }
@@ -350,16 +384,19 @@ export class LoanController
         {
             const userId = req.user.id;
             const loanId = req.params.id;
+            const bankId = req.user.bankId;
 
             const pool = await dbSetUp();
 
             const [loan] = await pool.query(
-                'SELECT id FROM loans WHERE id = ? AND customerId = ?',
-                [loanId, userId]
+                'SELECT id FROM loans WHERE id = ? AND customerId = ? AND bankId = ?',
+                [loanId, userId, bankId]
             );
 
             if (!Array.isArray(loan) || loan.length === 0)
             {
+                console.log("❌ GetLoanRepaymentHistory: Loan not found")
+
                 return res.status(404).json({ message: 'Loan not found' });
             }
 
@@ -374,13 +411,15 @@ export class LoanController
 
             if (!Array.isArray(repayments) || repayments.length === 0)
             {
+                console.log("🪹 GetLoanRepaymentHistory: No repayment history found for this loan")
+
                 return res.status(200).json({ 
                     repaymentHistory: [],
                     message: 'No repayment history found for this loan'
                 });
             }
 
-            // console.log("")
+            console.log("✅ GetLoanRepaymentHistory: Repayment history retrieved successfully")
 
             res.status(200).json({
                 message: 'Repayment history retrieved successfully',
@@ -390,7 +429,7 @@ export class LoanController
         }
         catch(error)
         {
-            console.error('GetLoanRepaymentHistory error:', error);
+            console.error('❌ GetLoanRepaymentHistory error:', error);
 
             res.status(500).json({ message: 'could not get repayment history', error: error });
         }
