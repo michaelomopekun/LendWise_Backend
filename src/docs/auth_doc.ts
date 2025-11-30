@@ -3,7 +3,7 @@
  * /api/auth/register:
  *   post:
  *     summary: Register a new customer
- *     description: Create a new customer account with personal and financial information
+ *     description: Create a new customer account with personal and financial information. Requires a valid bank ID.
  *     tags:
  *       - Authentication
  *     requestBody:
@@ -17,8 +17,9 @@
  *               - lastName
  *               - email
  *               - phoneNumber
- *               - password
+ *               - passwordHash
  *               - income
+ *               - bankId
  *             properties:
  *               firstName:
  *                 type: string
@@ -33,13 +34,17 @@
  *               phoneNumber:
  *                 type: string
  *                 example: "08012345678"
- *               password:
+ *               passwordHash:
  *                 type: string
  *                 format: password
  *                 example: "SecurePass123"
  *               income:
  *                 type: number
  *                 example: 500000
+ *               bankId:
+ *                 type: string
+ *                 example: "550e8400-e29b-41d4-a716-446655440001"
+ *                 description: "The ID of the bank the customer is registering with"
  *               occupation:
  *                 type: string
  *                 example: "Software Engineer"
@@ -63,12 +68,27 @@
  *                     id:
  *                       type: string
  *                       example: "550e8400-e29b-41d4-a716-446655440000"
+ *                     bankId:
+ *                       type: string
+ *                       example: "550e8400-e29b-41d4-a716-446655440001"
  *                     firstName:
  *                       type: string
+ *                       example: "John"
  *                     lastName:
  *                       type: string
+ *                       example: "Doe"
  *                     email:
  *                       type: string
+ *                       example: "john.doe@example.com"
+ *                     phoneNumber:
+ *                       type: string
+ *                       example: "08012345678"
+ *                     income:
+ *                       type: number
+ *                       example: 500000
+ *                     occupation:
+ *                       type: string
+ *                       example: "Software Engineer"
  *       400:
  *         description: Missing required fields
  *         content:
@@ -79,6 +99,16 @@
  *                 message:
  *                   type: string
  *                   example: "Missing required fields"
+ *       404:
+ *         description: Bank not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Bank not found"
  *       409:
  *         description: Email already registered
  *         content:
@@ -158,6 +188,9 @@
  *                     email:
  *                       type: string
  *                       example: "john.doe@example.com"
+ *                     bankId:
+ *                       type: string
+ *                       example: "550e8400-e29b-41d4-a716-446655440001"
  *       400:
  *         description: Email and password required
  *         content:

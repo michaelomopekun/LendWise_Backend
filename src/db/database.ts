@@ -129,6 +129,7 @@ async function createTables(pool: any)
                 disbursementDate DATETIME,
                 status ENUM('pending', 'approved', 'rejected', 'active', 'completed') DEFAULT 'pending',
                 outStandingBalance DECIMAL(12, 2) NOT NULL,
+                dueDate DATETIME,
                 approved_by VARCHAR(36),
                 createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

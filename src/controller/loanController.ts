@@ -16,7 +16,7 @@ export class LoanController
             const pool = await dbSetUp();
 
             const [loan] = await pool.query(
-                `SELECT l.id, l.amount, l.tenureMonth, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outstandingBalance, l.customerId
+                `SELECT l.id, l.bankId, l.amount, l.tenureMonth, l.status, l.createdAt, lt.name AS loanTypeName, lt.interestRate, l.outstandingBalance, l.customerId
                  FROM loans l
                  JOIN loan_types lt ON l.loan_typeId = lt.id
                  WHERE l.id = ? AND l.customerId = ?`,
@@ -152,7 +152,7 @@ export class LoanController
 
             // Get loan type with interest rate
             const [loanType] = await pool.query(
-                'SELECT id, name, interestRate, minAmount, maxAmount FROM loan_types WHERE id = ?',
+                'SELECT id, bankId, name, interestRate, minAmount, maxAmount FROM loan_types WHERE id = ?',
                 [loan_typeId]
             );
 
@@ -191,9 +191,9 @@ export class LoanController
 
 
             await pool.query(
-                `INSERT INTO loans (id, customerId, loan_typeId, amount, interestRate, tenureMonth, status, outStandingBalance, dueDate)
+                `INSERT INTO loans (id, customerId, loan_typeId, bankId, amount, interestRate, tenureMonth, status, outStandingBalance, dueDate)
                 VALUES (?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
-                [loanId, customerId, loan_typeId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
+                [loanId, customerId, loan_typeId, bankId, amount, type.interestRate, tenureMonth, outStandingBalance, dueDate]
             );
 
             res.status(201).json({

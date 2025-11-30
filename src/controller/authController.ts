@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { hashPassword, comparePassword } from '../utils/password';
 import { generateToken } from '../utils/jwt';
 import { Bank } from '../models/Bank';
+import { Customer } from '../models/Customer';
 
 
 export class AuthController
@@ -13,10 +14,10 @@ export class AuthController
     {
         try
         {
-            const { firstName, lastName, email, phoneNumber, password, income, occupation } = req.body;
+            const { firstName, lastName, email, phoneNumber, passwordHash, income, occupation, bankId }: Customer = req.body;
 
             // Validate input
-            if (!firstName || !lastName || !email || !phoneNumber || !password || !income) 
+            if (!firstName || !lastName || !email || !phoneNumber || !passwordHash || !income || !bankId) 
             {
                 return res.status(400).json({ message: 'Missing required fields' });
             }
@@ -34,19 +35,28 @@ export class AuthController
                 return res.status(409).json({ message: 'Email already registered' });
             }
 
+            const [existingBank] = await pool.query(
+                `SELECT id FROM banks WHERE id = ?`,
+                [bankId]
+            );
+            
+            if(!Array.isArray(existingBank) || existingBank.length == 0)
+            {
+                return res.status(404).json({ message: 'Bank not found' });
+            }
+
             // Hash password
-            const hashedPassword = await hashPassword(password);
+            const hashedPassword = await hashPassword(passwordHash);
 
             //generate user id
             const customerId = uuidv4();
 
             // Create customer
             const [result] = await pool.query(
-                `INSERT INTO customers (id, firstName, lastName, email, phoneNumber, passwordHash, income, occupation) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                [customerId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
+                `INSERT INTO customers (id, bankId, firstName, lastName, email, phoneNumber, passwordHash, income, occupation) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                [customerId, bankId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
             );
-
 
             // Generate token
             const token = generateToken({ id: customerId, email, role: 'customer'});
@@ -56,9 +66,13 @@ export class AuthController
                 token,
                 user: {
                     id: customerId,
+                    bankId,
                     firstName,
                     lastName,
-                    email
+                    email,
+                    phoneNumber,
+                    income,
+                    occupation
                 }
             });
         }
@@ -87,7 +101,7 @@ export class AuthController
 
             // Find customer
             const [customer] = await pool.query(
-                'SELECT id, firstName, lastName, email, passwordHash FROM customers WHERE email = ?',
+                'SELECT id, firstName, lastName, email, passwordHash, bankId FROM customers WHERE email = ?',
                 [email]
             );
 
@@ -116,7 +130,8 @@ export class AuthController
                     id: user.id,
                     firstName: user.firstName,
                     lastName: user.lastName,
-                    email: user.email
+                    email: user.email,
+                    bankId: user.bankId
                 }
             });
         }

@@ -2,18 +2,21 @@ import { Router } from 'express';
 import { AuthController } from '../controller/authController';
 import { LoanController } from '../controller/loanController';
 import { CustomerController } from '../controller/customerController';
-import { authMiddleware } from '../middleware/auth';
+import { authMiddleware, bankAuthMiddleware } from '../middleware/auth';
+import { BankController } from '../controller/BankController';
 
 
 const router = Router();
+const customerProtectedRouter = Router();
+const bankProtectedRouter = Router();
 
-const protectedRouter = Router();
-protectedRouter.use(authMiddleware);
+customerProtectedRouter.use(authMiddleware);
+bankProtectedRouter.use(bankAuthMiddleware)
 
 const authController = new AuthController();
 const loanController = new LoanController();
 const customerController = new CustomerController();
-
+const bankController = new BankController();
 
 // Authentication routes
 router.post('/auth/register', authController.Register.bind(authController));
@@ -23,18 +26,23 @@ router.post('/auth/bankRegister', authController.RegisterBank.bind(authControlle
 
 
 // loan routes
-protectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
-protectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
-protectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
+customerProtectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
+customerProtectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
+customerProtectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
 
-protectedRouter.get('/loans/:id/repayment_history', loanController.GetLoanRepaymentHistory.bind(loanController));
-protectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
-protectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
-protectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));
+customerProtectedRouter.get('/loans/:id/repayment_history', loanController.GetLoanRepaymentHistory.bind(loanController));
+customerProtectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
+customerProtectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
+customerProtectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));
 
 // customer routes
-protectedRouter.get('/customers/profile', customerController.GetCustomerProfile.bind(customerController));
+customerProtectedRouter.get('/customers/profile', customerController.GetCustomerProfile.bind(customerController));
 
-router.use(protectedRouter);
+
+//bank routes
+router.get('/banks', bankController.GetAllBanks.bind(bankController));
+
+router.use(customerProtectedRouter);
+router.use(bankProtectedRouter);
 
 export default router;
