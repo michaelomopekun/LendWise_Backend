@@ -58,6 +58,15 @@ export class AuthController
                 [customerId, bankId, firstName, lastName, email, phoneNumber, hashedPassword, income, occupation || null]
             );
 
+            const walletId = uuidv4();
+
+            // create wallet for customer
+            const [walletResult] = await pool.query(
+                `INSERT INTO wallets (id, bankId, customerId, wallet_type, balance) 
+                VALUES (?, ?, ?, ?, ?)`,
+                [walletId, bankId, customerId, 'customer', 0 ]
+            );
+
             // Generate token
             const token = generateToken({ id: customerId, email, role: 'customer', bankId});
 
@@ -241,6 +250,15 @@ export class AuthController
                 `INSERT INTO banks (id, bankName, contactEmail, contactPhone, passwordHash, licenseNumber, headOfficeAddress, status) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
                 [bankId, bankName, contactEmail, contactPhone, hashedPassword,licenseNumber, headOfficeAddress, 'active' ]
+            );
+
+            const walletId = uuidv4();
+
+            // create wallet for bank
+            const [walletResult] = await pool.query(
+                `INSERT INTO wallets (id, bankId, customer_id, wallet_type, balance) 
+                VALUES (?, ?, ?, ?, ?)`,
+                [walletId, bankId, null, 'bank', 0 ]
             );
 
             // Generate token

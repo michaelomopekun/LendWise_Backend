@@ -228,7 +228,7 @@
 
 /**
  * @swagger
- * /api/auth/bankRegister:
+ * /api/auth/bank/register:
  *   post:
  *     summary: Register a new bank
  *     description: Create a new bank account with institutional and contact information
@@ -345,7 +345,7 @@
 
 /**
  * @swagger
- * /api/auth/bankLogin:
+ * /api/auth/bank/login:
  *   post:
  *     summary: Login a bank
  *     description: Authenticate a bank with contact email and password

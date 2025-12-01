@@ -5,12 +5,15 @@ import { CustomerController } from '../controller/customerController';
 import { authMiddleware, bankAuthMiddleware } from '../middleware/auth';
 import { BankController } from '../controller/BankController';
 import { LoanTypeController } from '../controller/loanTypeController';
+import { WalletController } from '../controller/walletContoller';
 
 
 const router = Router();
 const customerProtectedRouter = Router();
 const bankProtectedRouter = Router();
+const protectedRouter = Router();
 
+protectedRouter.use(authMiddleware);
 customerProtectedRouter.use(authMiddleware);
 bankProtectedRouter.use(bankAuthMiddleware)
 
@@ -19,12 +22,17 @@ const loanController = new LoanController();
 const customerController = new CustomerController();
 const bankController = new BankController();
 const loanTypeController = new LoanTypeController();
+const walletController = new WalletController();
 
 // Authentication routes
 router.post('/auth/register', authController.Register.bind(authController));
 router.post('/auth/login', authController.Login.bind(authController));
-router.post('/auth/bankLogin', authController.BankLogin.bind(authController));
-router.post('/auth/bankRegister', authController.RegisterBank.bind(authController));
+router.post('/auth/bank/login', authController.BankLogin.bind(authController));
+router.post('/auth/bank/register', authController.RegisterBank.bind(authController));
+
+
+// wallet routes
+protectedRouter.get('/wallet', walletController.GetWallet.bind(walletController));
 
 
 // loan type customer route
@@ -56,7 +64,9 @@ bankProtectedRouter.get('/banks/loans/pending', loanController.GetBanksPendingLo
 bankProtectedRouter.put('/banks/loans/:id/approve', loanController.ApproveLoan.bind(loanController));
 bankProtectedRouter.put('/banks/loans/:id/reject', loanController.RejectLoan.bind(loanController));
 
+
 router.use(customerProtectedRouter);
 router.use(bankProtectedRouter);
+router.use(protectedRouter);
 
 export default router;
