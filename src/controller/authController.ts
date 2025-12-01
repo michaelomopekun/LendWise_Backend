@@ -180,7 +180,7 @@ export class AuthController
             }
 
             // Generate token
-            const token = generateToken({ id: bankData.id, email: bankData.contactEmail, role: 'bank', bankId: bankData.bankId });
+            const token = generateToken({ id: bankData.id, email: bankData.contactEmail, role: 'bank', bankId: bankData.id });
 
             res.status(200).json({
                 message: 'Login successful',

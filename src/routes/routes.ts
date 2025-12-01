@@ -39,20 +39,22 @@ bankProtectedRouter.post('/loans/types', loanTypeController.CreateLoanType.bind(
 customerProtectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
 customerProtectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
 customerProtectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
-
-
 customerProtectedRouter.get('/loans/:id/repayment_history', loanController.GetLoanRepaymentHistory.bind(loanController));
-customerProtectedRouter.get('/loans/:id', loanController.GetLoanDetails.bind(loanController));
+customerProtectedRouter.get('/loans/:id/customerId/:customerId', loanController.GetLoanDetails.bind(loanController));
 customerProtectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
 customerProtectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));
 
 
 // customer routes
-customerProtectedRouter.get('/customers/profile', customerController.GetCustomerProfile.bind(customerController));
+customerProtectedRouter.get('/customers/profile/:customerId', customerController.GetCustomerProfile.bind(customerController));
 
 
 //bank routes
 router.get('/banks', bankController.GetAllBanks.bind(bankController));
+bankProtectedRouter.get('/banks/metrics', bankController.FetchKeyMetrics.bind(bankController));
+bankProtectedRouter.get('/banks/loans/pending', loanController.GetBanksPendingLoan.bind(loanController));
+bankProtectedRouter.put('/banks/loans/:id/approve', loanController.ApproveLoan.bind(loanController));
+bankProtectedRouter.put('/banks/loans/:id/reject', loanController.RejectLoan.bind(loanController));
 
 router.use(customerProtectedRouter);
 router.use(bankProtectedRouter);

@@ -11,7 +11,7 @@ export class LoanController
         try
         {
             const loanId = req.params.id;
-            const customerId = req.user.id;
+            const customerId = req.params.customerId;
 
             const pool = await dbSetUp();
 
@@ -339,9 +339,9 @@ export class LoanController
             dueDate.setMonth(dueDate.getMonth() + currentLoan.tenureMonth);
 
             await pool.query(
-                `INSERT INTO repayments (id, bankId, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)
+                `INSERT INTO repayments (id, loanId, amountPaid, paymentDate, remainingBalance, dueDate, status)
                 VALUES (?, ?, ?, ?, ?, ?, 'completed')`,
-                [repaymentId, bankId, loanId, amount, now, newOutstandingBalance, dueDate]
+                [repaymentId, loanId, amount, now, newOutstandingBalance, dueDate]
             );
 
             // Update loan outstanding balance
@@ -432,6 +432,118 @@ export class LoanController
             console.error('❌ GetLoanRepaymentHistory error:', error);
 
             res.status(500).json({ message: 'could not get repayment history', error: error });
+        }
+    }
+
+    async GetBanksPendingLoan(req: any, res: any)
+    {
+        try
+        {
+            const bankId = req.user.bankId;
+
+            const pool = await dbSetUp();
+
+            //join to include customer name and loan type name
+            const [loans] = await pool.query(
+                'SELECT l.id, l.amount, c.id AS customerId, c.firstName, c.lastName, lt.name AS loanTypeName, l.status, l.createdAt FROM loans l JOIN customers c ON l.customerId = c.id JOIN loan_types lt ON l.loan_typeId = lt.id WHERE l.bankId = ? AND l.status = ? ORDER BY l.createdAt ASC',
+                [bankId, 'pending']
+            );
+
+            if (!Array.isArray(loans) || loans.length === 0)
+            {
+                console.log("🪹 GetBanksPendingLoan: No pending loans found for this bank");
+
+                return res.status(200).json({ 
+                    loans: [],
+                    message: 'No pending loans found for this bank'
+                });
+            }
+
+            console.log("✅ GetBanksPendingLoan: Pending loans retrieved successfully");
+
+            res.status(200).json({
+                message: 'Pending loans retrieved successfully',
+                loans: loans
+            });
+        }
+        catch(error)
+        {
+            console.error('❌ GetBanksPendingLoan error:', error);
+            res.status(500).json({ message: 'could not get pending loans', error: error });
+        }
+    }
+
+    async ApproveLoan(req: any, res: any)
+    {
+        try
+        {
+            const loanId = req.params.id;
+            const bankId = req.user.bankId;
+
+            const pool = await dbSetUp();
+
+            const [loan] = await pool.query(
+                'SELECT id FROM loans WHERE id = ? AND bankId = ?',
+                [loanId, bankId]
+            );
+
+            if (!Array.isArray(loan) || loan.length === 0)
+            {
+                console.log("🪹 ApproveLoan: Loan not found");
+
+                return res.status(404).json({ message: 'Loan not found' });
+            }
+
+            await pool.query(
+                'UPDATE loans SET status = ? WHERE id = ? AND bankId = ?',
+                ['active', loanId, bankId]
+            );
+
+            console.log("✅ ApproveLoan: Loan approved successfully");
+
+            res.status(200).json({ message: 'Loan approved successfully' });
+        }
+        catch(error)
+        {
+            console.error('❌ ApproveLoan error:', error);
+            res.status(500).json({ message: 'could not approve loan', error: error });
+        }
+    }
+
+    async RejectLoan(req: any, res: any)
+    {
+        try
+        {
+            const loanId = req.params.id;
+            const bankId = req.user.bankId;
+
+            const pool = await dbSetUp();
+
+            const [loan] = await pool.query(
+                'SELECT id FROM loans WHERE id = ? AND bankId = ?',
+                [loanId, bankId]
+            );
+
+            if (!Array.isArray(loan) || loan.length === 0)
+            {
+                console.log("🪹 RejectLoan: Loan not found");
+
+                return res.status(404).json({ message: 'Loan not found' });
+            }
+
+            await pool.query(
+                'UPDATE loans SET status = ? WHERE id = ? AND bankId = ?',
+                ['rejected', loanId, bankId]
+            );
+
+            console.log("✅ RejectLoan: Loan rejected successfully");
+
+            res.status(200).json({ message: 'Loan rejected successfully' });
+        }
+        catch(error)
+        {
+            console.error('❌ RejectLoan error:', error);
+            res.status(500).json({ message: 'could not reject loan', error: error });
         }
     }
     

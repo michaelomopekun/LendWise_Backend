@@ -8,7 +8,7 @@ export class CustomerController
     {
         try
         {
-            const customerId = req.user.id;
+            const customerId = req.params.customerId;
 
             const pool = await dbSetUp();
 
@@ -21,6 +21,8 @@ export class CustomerController
             {
                 return res.status(404).json({ message: 'Customer not found' });
             }
+
+            console.log("✅ GetCustomerProfile: Customer profile retrieved successfully")
 
             res.status(200).json({ customer: customer[0] });
         }

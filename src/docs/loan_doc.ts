@@ -551,3 +551,268 @@
  *                 error:
  *                   type: object
  */
+
+
+/**
+ * @swagger
+ * /api/banks/loans/pending:
+ *   get:
+ *     summary: Get all pending loan applications for a bank
+ *     description: Retrieve a list of all pending loan applications for the authenticated bank, including customer details and loan type information. The loans are ordered by creation date (oldest first). This endpoint is protected and requires bank authentication. The bankId is automatically extracted from the JWT token.
+ *     tags:
+ *       - Banks
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Pending loans retrieved successfully or no pending loans found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Pending loans retrieved successfully"
+ *                 loans:
+ *                   type: array
+ *                   description: Array of pending loan applications
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: Loan ID (UUID)
+ *                         example: "550e8400-e29b-41d4-a716-446655440010"
+ *                       amount:
+ *                         type: number
+ *                         format: decimal
+ *                         description: Loan amount requested
+ *                         example: 50000.00
+ *                       firstName:
+ *                         type: string
+ *                         description: Customer's first name
+ *                         example: "John"
+ *                       lastName:
+ *                         type: string
+ *                         description: Customer's last name
+ *                         example: "Doe"
+ *                       loanTypeName:
+ *                         type: string
+ *                         description: Name of the loan type
+ *                         example: "Personal Loan"
+ *                       status:
+ *                         type: string
+ *                         enum: [pending]
+ *                         description: Status of the loan (always 'pending' for this endpoint)
+ *                         example: "pending"
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: Timestamp when the loan application was created
+ *                         example: "2024-11-30T15:30:00.000Z"
+ *             examples:
+ *               withLoans:
+ *                 value:
+ *                   message: "Pending loans retrieved successfully"
+ *                   loans:
+ *                     - id: "550e8400-e29b-41d4-a716-446655440010"
+ *                       amount: 50000.00
+ *                       firstName: "John"
+ *                       lastName: "Doe"
+ *                       loanTypeName: "Personal Loan"
+ *                       status: "pending"
+ *                       createdAt: "2024-11-30T15:30:00.000Z"
+ *                     - id: "550e8400-e29b-41d4-a716-446655440011"
+ *                       amount: 75000.00
+ *                       firstName: "Jane"
+ *                       lastName: "Smith"
+ *                       loanTypeName: "Business Loan"
+ *                       status: "pending"
+ *                       createdAt: "2024-11-30T16:45:00.000Z"
+ *               noLoans:
+ *                 value:
+ *                   loans: []
+ *                   message: "No pending loans found for this bank"
+ *       401:
+ *         description: Unauthorized - No token provided or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No token provided"
+ *             examples:
+ *               noToken:
+ *                 value:
+ *                   message: "No token provided"
+ *               invalidToken:
+ *                 value:
+ *                   message: "Invalid token"
+ *                   error: {}
+ *               unauthorized:
+ *                 value:
+ *                   message: "Unauthorized"
+ *       500:
+ *         description: Server error while fetching pending loans
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "could not get pending loans"
+ *                 error:
+ *                   type: object
+ */
+
+/**
+ * @swagger
+ * /api/banks/loans/{id}/approve:
+ *   put:
+ *     summary: Approve a pending loan application
+ *     description: Approve a loan application by changing its status from 'pending' to 'approved'. This endpoint is protected and requires bank authentication. The bankId is automatically extracted from the JWT token to ensure banks can only approve loans belonging to them.
+ *     tags:
+ *       - Banks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The loan ID (UUID) to approve
+ *         example: "550e8400-e29b-41d4-a716-446655440010"
+ *     responses:
+ *       200:
+ *         description: Loan approved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan approved successfully"
+ *       401:
+ *         description: Unauthorized - No token provided or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No token provided"
+ *             examples:
+ *               noToken:
+ *                 value:
+ *                   message: "No token provided"
+ *               invalidToken:
+ *                 value:
+ *                   message: "Invalid token"
+ *                   error: {}
+ *               unauthorized:
+ *                 value:
+ *                   message: "Unauthorized"
+ *       404:
+ *         description: Loan not found or does not belong to this bank
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan not found"
+ *       500:
+ *         description: Server error while approving loan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "could not approve loan"
+ *                 error:
+ *                   type: object
+ */
+
+/**
+ * @swagger
+ * /api/banks/loans/{id}/reject:
+ *   put:
+ *     summary: Reject a pending loan application
+ *     description: Reject a loan application by changing its status from 'pending' to 'rejected'. This endpoint is protected and requires bank authentication. The bankId is automatically extracted from the JWT token to ensure banks can only reject loans belonging to them.
+ *     tags:
+ *       - Banks
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The loan ID (UUID) to reject
+ *         example: "550e8400-e29b-41d4-a716-446655440010"
+ *     responses:
+ *       200:
+ *         description: Loan rejected successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan rejected successfully"
+ *       401:
+ *         description: Unauthorized - No token provided or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "No token provided"
+ *             examples:
+ *               noToken:
+ *                 value:
+ *                   message: "No token provided"
+ *               invalidToken:
+ *                 value:
+ *                   message: "Invalid token"
+ *                   error: {}
+ *               unauthorized:
+ *                 value:
+ *                   message: "Unauthorized"
+ *       404:
+ *         description: Loan not found or does not belong to this bank
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Loan not found"
+ *       500:
+ *         description: Server error while rejecting loan
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "could not reject loan"
+ *                 error:
+ *                   type: object
+ */
