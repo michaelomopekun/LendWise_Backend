@@ -268,3 +268,98 @@
  *                   type: string
  *                   example: "Could not add funds to wallet"
  */
+
+/**
+ * @swagger
+ * /api/wallet/withdraw:
+ *   post:
+ *     summary: Withdraw funds from wallet
+ *     description: Withdraw funds (debit) from the authenticated user's wallet. Validates sufficient balance before processing. Creates a transaction record for the withdrawal.
+ *     tags:
+ *       - Wallet
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 description: Amount to withdraw from wallet
+ *                 example: 10000
+ *               description:
+ *                 type: string
+ *                 description: Optional description for the withdrawal
+ *                 example: "Personal withdrawal"
+ *     responses:
+ *       200:
+ *         description: Funds withdrawn successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Funds withdrawn from wallet successfully"
+ *                 transactionId:
+ *                   type: string
+ *                   example: "550e8400-e29b-41d4-a716-446655440061"
+ *                 previousBalance:
+ *                   type: number
+ *                   example: 50000
+ *                 amountWithdrawn:
+ *                   type: number
+ *                   example: 10000
+ *                 newBalance:
+ *                   type: number
+ *                   example: 40000
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Invalid input or insufficient balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Insufficient balance. Available: 5000, Requested: 10000"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: Wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Wallet not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Could not withdraw funds from wallet"
+ */

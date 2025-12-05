@@ -174,4 +174,88 @@ export class WalletController
         }
     }
 
+
+    async WithdrawFundFromWallet(req: Request, res: Response)
+    {
+        try
+        {
+            const userId = req.user?.id;
+            const { amount, description } = req.body;
+
+            // Validate user is authenticated
+            if (!userId)
+            {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            // Validate required fields
+            if (!amount)
+            {
+                return res.status(400).json({ message: 'Missing required field: amount' });
+            }
+
+            // Validate amount is positive
+            if (amount <= 0)
+            {
+                return res.status(400).json({ message: 'Amount must be greater than 0' });
+            }
+
+            const pool = await dbSetUp();
+
+            // Get wallet for the authenticated user
+            const [userWallet] = await pool.query(
+                `SELECT id, balance FROM wallet WHERE customer_id = ? OR bankId = ?`,
+                [userId, userId]
+            );
+
+            if (!Array.isArray(userWallet) || userWallet.length === 0)
+            {
+                return res.status(404).json({ message: 'Wallet not found' });
+            }
+
+            const walletId = (userWallet as any)[0].id;
+            const currentBalance = (userWallet as any)[0].balance;
+
+            // Validate sufficient balance
+            if (amount > currentBalance)
+            {
+                return res.status(400).json({ 
+                    message: `Insufficient balance. Available: ${currentBalance}, Requested: ${amount}` 
+                });
+            }
+
+            const newBalance = currentBalance - amount;
+
+            // Update wallet balance
+            await pool.query(
+                `UPDATE wallet SET balance = ? WHERE id = ?`,
+                [newBalance, walletId]
+            );
+
+            // Create transaction record
+            const transactionId = uuidv4();
+            const now = new Date();
+
+            await pool.query(
+                `INSERT INTO wallet_transaction (id, wallet_id, amount, transaction_type, reference, description, created_at)
+                VALUES (?, ?, ?, 'debit', ?, ?, ?)`,
+                [transactionId, walletId, amount, `WITHDRAW-${transactionId.substring(0, 8)}`, description || 'Wallet withdrawal', now]
+            );
+
+            res.status(200).json({
+                message: 'Funds withdrawn from wallet successfully',
+                transactionId: transactionId,
+                previousBalance: currentBalance,
+                amountWithdrawn: amount,
+                newBalance: newBalance,
+                timestamp: now
+            });
+        }
+        catch (error)
+        {
+            console.error('WithdrawFundFromWallet error:', error);
+            res.status(500).json({ message: 'Could not withdraw funds from wallet', error: error });
+        }
+    }
+
 }

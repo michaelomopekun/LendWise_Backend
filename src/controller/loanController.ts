@@ -1,10 +1,13 @@
 import { dbSetUp } from "../db/database";
 import { v4 as uuidv4 } from 'uuid';
 import { Loan } from "../models/Loan";
+import { WalletService } from "../service/walletService";
 
 
 export class LoanController
 {
+
+    private walletService = new WalletService();
 
     async GetLoanDetails(req: any, res: any)
     {
@@ -329,6 +332,9 @@ export class LoanController
                 });
             }
 
+            //transfer funds from customer's wallet to bank's wallet
+            await this.walletService.transferFunds(userId, bankId, amount, 'Loan repayment', loanId);
+
             // Calculate new outstanding balance
             const newOutstandingBalance = currentLoan.outStandingBalance - amount;
 
@@ -374,9 +380,11 @@ export class LoanController
         {
             console.error('❌RepayLoan error:', error);
 
-            res.status(500).json({ message: 'could not process loan repayment', error: error });
+            const errorMessage = error instanceof Error ? error.message : 'could not process loan repayment';
+            res.status(500).json({ message: errorMessage });
         }
     }
+
 
     async GetLoanRepaymentHistory(req: any, res: any)
     {
@@ -482,8 +490,9 @@ export class LoanController
 
             const pool = await dbSetUp();
 
+            // Verify loan exists
             const [loan] = await pool.query(
-                'SELECT id FROM loans WHERE id = ? AND bankId = ?',
+                'SELECT id, amount, customerId FROM loans WHERE id = ? AND bankId = ?',
                 [loanId, bankId]
             );
 
@@ -494,6 +503,13 @@ export class LoanController
                 return res.status(404).json({ message: 'Loan not found' });
             }
 
+            const customerId = (loan as any)[0].customerId;
+            const amount = (loan as any)[0].amount;
+            
+            // transfer loan amount from bank's wallet to customer's wallet
+            await this.walletService.transferFunds(bankId, customerId, amount, `Loan disbursement to customer ${customerId}`, loanId);
+
+            // Update loan status to active
             await pool.query(
                 'UPDATE loans SET status = ? WHERE id = ? AND bankId = ?',
                 ['active', loanId, bankId]
@@ -506,9 +522,12 @@ export class LoanController
         catch(error)
         {
             console.error('❌ ApproveLoan error:', error);
-            res.status(500).json({ message: 'could not approve loan', error: error });
+            
+            const errorMessage = error instanceof Error ? error.message : 'could not approve loan';
+            res.status(500).json({ message: errorMessage });
         }
     }
+    
 
     async RejectLoan(req: any, res: any)
     {
