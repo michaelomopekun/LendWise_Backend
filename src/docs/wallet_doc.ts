@@ -80,3 +80,96 @@
  *                 error:
  *                   type: object
  */
+
+/**
+ * @swagger
+ * /api/wallet/transactions:
+ *   get:
+ *     summary: Get wallet transactions
+ *     description: Retrieve transaction history for the authenticated user's wallet. Returns all transactions ordered by date (newest first).
+ *     tags:
+ *       - Wallet
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Wallet transactions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Wallet transactions retrieved successfully"
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: Unique transaction ID
+ *                         example: "550e8400-e29b-41d4-a716-446655440060"
+ *                       wallet_id:
+ *                         type: string
+ *                         description: Associated wallet ID
+ *                         example: "550e8400-e29b-41d4-a716-446655440050"
+ *                       amount:
+ *                         type: number
+ *                         description: Transaction amount
+ *                         example: 5000.00
+ *                       transaction_type:
+ *                         type: string
+ *                         description: Type of transaction
+ *                         enum: ['credit', 'debit', 'transfer']
+ *                         example: "debit"
+ *                       reference:
+ *                         type: string
+ *                         description: Reference ID for the transaction
+ *                         example: "LOAN-001-REPAY"
+ *                       description:
+ *                         type: string
+ *                         description: Transaction description
+ *                         example: "Loan repayment for loan ID 550e8400-e29b-41d4-a716-446655440010"
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                         description: When the transaction was created
+ *                 count:
+ *                   type: integer
+ *                   description: Total number of transactions
+ *                   example: 5
+ *       401:
+ *         description: Unauthorized - No token provided or invalid token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: Wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Wallet not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Server error"
+ *                 error:
+ *                   type: object
+ */

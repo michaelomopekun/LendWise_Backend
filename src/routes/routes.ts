@@ -33,6 +33,7 @@ router.post('/auth/bank/register', authController.RegisterBank.bind(authControll
 
 // wallet routes
 protectedRouter.get('/wallet', walletController.GetWallet.bind(walletController));
+protectedRouter.get('/wallet/transactions', walletController.GetWalletTransactions.bind(walletController));
 
 
 // loan type customer route
