@@ -173,3 +173,98 @@
  *                 error:
  *                   type: object
  */
+
+/**
+ * @swagger
+ * /api/wallet/fund:
+ *   post:
+ *     summary: Add funds to wallet
+ *     description: Add funds (credit) to the authenticated user's wallet. Creates a transaction record for the funding.
+ *     tags:
+ *       - Wallet
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 description: Amount to add to wallet
+ *                 example: 50000
+ *               description:
+ *                 type: string
+ *                 description: Optional description for the funding
+ *                 example: "Initial wallet setup"
+ *     responses:
+ *       200:
+ *         description: Funds added successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Funds added to wallet successfully"
+ *                 transactionId:
+ *                   type: string
+ *                   example: "550e8400-e29b-41d4-a716-446655440060"
+ *                 previousBalance:
+ *                   type: number
+ *                   example: 0
+ *                 amountAdded:
+ *                   type: number
+ *                   example: 50000
+ *                 newBalance:
+ *                   type: number
+ *                   example: 50000
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Amount must be greater than 0"
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Unauthorized"
+ *       404:
+ *         description: Wallet not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Wallet not found"
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Could not add funds to wallet"
+ */
