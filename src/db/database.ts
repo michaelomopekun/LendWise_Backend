@@ -12,6 +12,7 @@ export async function dbSetUp()
         port: parseInt(process.env.DB_PORT || "3306")
     });
     
+    
     try 
     {
         await initialConnection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
@@ -37,7 +38,7 @@ export async function dbSetUp()
         queueLimit: 0
     });
 
-    // await createTables(pool);
+    await createTables(pool);
 
     return pool;
 }
