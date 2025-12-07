@@ -19,7 +19,13 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(cors(
 {
-  origin: "*",
+  origin: [
+        'http://localhost:5173',      // Local frontend (Vite)
+        // 'http://localhost:3000',      // Alternative local frontend
+        // 'http://localhost:5174',      // Alternative local frontend
+        'https://lend-wise-frontend.vercel.app', // Production frontend
+        // process.env.FRONTEND_URL      // Environment variable for flexibility
+    ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
