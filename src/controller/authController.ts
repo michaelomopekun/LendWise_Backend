@@ -14,6 +14,8 @@ export class AuthController
     {
         try
         {
+            console.log("🔍 Register: User registration attempt")
+
             const { firstName, lastName, email, phoneNumber, passwordHash, income, occupation, bankId }: Customer = req.body;
 
             // Validate input
@@ -62,7 +64,7 @@ export class AuthController
 
             // create wallet for customer
             const [walletResult] = await pool.query(
-                `INSERT INTO wallets (id, bankId, customerId, wallet_type, balance) 
+                `INSERT INTO wallets (id, bankId, customer_id, wallet_type, balance) 
                 VALUES (?, ?, ?, ?, ?)`,
                 [walletId, bankId, customerId, 'customer', 0 ]
             );
@@ -98,6 +100,8 @@ export class AuthController
     {
         try
         {
+            console.log("🔍 Login: User login attempt")
+
             const { email, password } = req.body;
 
             // Validate input
@@ -157,6 +161,8 @@ export class AuthController
     {
         try
         {
+            console.log("🔍 BankLogin: Bank login attempt")
+
             const { contactEmail, passwordHash } = req.body;
 
             // Validate input
@@ -215,6 +221,8 @@ export class AuthController
     {
         try
         {
+            console.log("🔍 RegisterBank: Registering a new bank")
+
             const { bankName, licenseNumber, headOfficeAddress, contactEmail, contactPhone, passwordHash} :Bank = req.body;
 
             // Validate input

@@ -7,15 +7,15 @@ import { BankController } from '../controller/BankController';
 import { LoanTypeController } from '../controller/loanTypeController';
 import { WalletController } from '../controller/walletContoller';
 
-
 const router = Router();
 const customerProtectedRouter = Router();
 const bankProtectedRouter = Router();
 const protectedRouter = Router();
 
-protectedRouter.use(authMiddleware);
+// Apply middleware ONLY to specific routers
 customerProtectedRouter.use(authMiddleware);
-bankProtectedRouter.use(bankAuthMiddleware)
+protectedRouter.use(authMiddleware);
+bankProtectedRouter.use(bankAuthMiddleware);
 
 const authController = new AuthController();
 const loanController = new LoanController();
@@ -24,29 +24,31 @@ const bankController = new BankController();
 const loanTypeController = new LoanTypeController();
 const walletController = new WalletController();
 
-// Authentication routes
+// ============ PUBLIC ROUTES (No middleware) ============
+// auth
 router.post('/auth/register', authController.Register.bind(authController));
 router.post('/auth/login', authController.Login.bind(authController));
 router.post('/auth/bank/login', authController.BankLogin.bind(authController));
 router.post('/auth/bank/register', authController.RegisterBank.bind(authController));
 
-
-// wallet routes
-protectedRouter.get('/wallet', walletController.GetWallet.bind(walletController));
-protectedRouter.get('/wallet/transactions', walletController.GetWalletTransactions.bind(walletController));
-protectedRouter.post('/wallet/fund', walletController.AddFundToWallet.bind(walletController));
-protectedRouter.post('/wallet/withdraw', walletController.WithdrawFundFromWallet.bind(walletController));
+// bank
+router.get('/banks', bankController.GetAllBanks.bind(bankController));
 
 
-// loan type customer route
+
+
+// ============ CUSTOMER PROTECTED ROUTES (authMiddleware) ============
+
+//wallet
+customerProtectedRouter.get('/wallet', walletController.GetWallet.bind(walletController));
+customerProtectedRouter.get('/wallet/transactions', walletController.GetWalletTransactions.bind(walletController));
+customerProtectedRouter.post('/wallet/fund', walletController.AddFundToWallet.bind(walletController));
+customerProtectedRouter.post('/wallet/withdraw', walletController.WithdrawFundFromWallet.bind(walletController));
+
+//loan types
 customerProtectedRouter.get('/loans/types', loanTypeController.GetLoanTypesByBankId.bind(loanTypeController));
 
-
-// loan type bank routes
-bankProtectedRouter.post('/loans/types', loanTypeController.CreateLoanType.bind(loanTypeController));
-
-
-// loan customer routes
+// loans
 customerProtectedRouter.get('/loans/summary', loanController.LoanSummary.bind(loanController));
 customerProtectedRouter.get('/loans/active', loanController.GetActiveLoans.bind(loanController));
 customerProtectedRouter.post('/loans/repay', loanController.RepayLoan.bind(loanController));
@@ -55,21 +57,27 @@ customerProtectedRouter.get('/loans/:id/customerId/:customerId', loanController.
 customerProtectedRouter.get('/loans', loanController.GetAllLoans.bind(loanController));
 customerProtectedRouter.post('/loans', loanController.RequestLoan.bind(loanController));
 
-
-// customer routes
+//customer
 customerProtectedRouter.get('/customers/profile/:customerId', customerController.GetCustomerProfile.bind(customerController));
 
 
-//bank routes
-router.get('/banks', bankController.GetAllBanks.bind(bankController));
+
+
+
+// ============ BANK PROTECTED ROUTES (bankAuthMiddleware) ============
+
+//bank
+bankProtectedRouter.post('/loans/types', loanTypeController.CreateLoanType.bind(loanTypeController));
 bankProtectedRouter.get('/banks/metrics', bankController.FetchKeyMetrics.bind(bankController));
 bankProtectedRouter.get('/banks/loans/pending', loanController.GetBanksPendingLoan.bind(loanController));
 bankProtectedRouter.put('/banks/loans/:id/approve', loanController.ApproveLoan.bind(loanController));
 bankProtectedRouter.put('/banks/loans/:id/reject', loanController.RejectLoan.bind(loanController));
 
 
+
+
 router.use(customerProtectedRouter);
-router.use(bankProtectedRouter);
 router.use(protectedRouter);
+router.use(bankProtectedRouter);
 
 export default router;

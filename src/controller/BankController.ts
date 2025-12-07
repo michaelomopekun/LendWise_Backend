@@ -8,6 +8,8 @@ export class BankController
     {
         try
         {
+            console.log("🔍 GetAllBanks: Fetching all banks")
+
             const pool = await dbSetUp();
             const [rows] = await pool.query('SELECT id, bankName FROM banks');
 
@@ -27,6 +29,8 @@ export class BankController
     {
         try
         {
+            console.log("🔍 FetchKeyMetrics: Fetching key metrics")
+
             const bankId = req.user?.bankId;
 
             const pool = await dbSetUp();

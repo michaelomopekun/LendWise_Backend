@@ -9,6 +9,8 @@ export class LoanTypeController
     {
         try
         {
+            console.log("🔍 GetLoanTypesByBankId: Fetching loan types by bank ID")
+
             const bankId = req.user.bankId;
 
             const pool = await dbSetUp();
@@ -37,6 +39,8 @@ export class LoanTypeController
     {
         try
         {
+            console.log("🔍 CreateLoanType: Creating a new loan type")
+
             const { bankId, name, interestRate, description, minAmount, maxAmount }: Loan_type = req.body;
 
             const pool = await dbSetUp();

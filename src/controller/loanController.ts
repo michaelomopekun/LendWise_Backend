@@ -13,6 +13,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 GetLoanDetails: Fetching loan details")
+
             const loanId = req.params.id;
             const customerId = req.params.customerId;
 
@@ -51,6 +53,9 @@ export class LoanController
     {
         try
         {
+
+            console.log("🔍 LoanSummary: Fetching loan summary")
+
             const customerId = req.user.id;
 
             const pool = await dbSetUp();
@@ -106,6 +111,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 GetAllLoans: Fetching all loans")
+
             const customerId = req.user.id;
 
             const pool = await dbSetUp();
@@ -142,6 +149,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 RequestLoan: Processing loan request")
+
             const customerId = req.user.id;
             const bankId = req.user.bankId;
             const { loan_typeId, amount, tenureMonth }:Loan = req.body;
@@ -247,6 +256,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 GetActiveLoans: Fetching active loans")
+
             const userId = req.user.id;
 
             const pool = await dbSetUp();
@@ -281,6 +292,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 RepayLoan: Processing loan repayment")
+
             const userId = req.user.id;
             const bankId = req.user.bankId;
             const { loanId, amount } = req.body;
@@ -333,7 +346,7 @@ export class LoanController
             }
 
             //transfer funds from customer's wallet to bank's wallet
-            await this.walletService.transferFunds(userId, bankId, amount, 'Loan repayment', loanId);
+            await this.walletService.transferFunds(userId, bankId, "customer", "bank", amount, 'Loan repayment', loanId);
 
             // Calculate new outstanding balance
             const newOutstandingBalance = currentLoan.outStandingBalance - amount;
@@ -390,6 +403,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 GetLoanRepaymentHistory: Fetching loan repayment history")
+
             const userId = req.user.id;
             const loanId = req.params.id;
             const bankId = req.user.bankId;
@@ -447,6 +462,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 GetBanksPendingLoan: Fetching pending loans for bank")
+
             const bankId = req.user.bankId;
 
             const pool = await dbSetUp();
@@ -485,6 +502,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 ApproveLoan: Processing loan approval")
+
             const loanId = req.params.id;
             const bankId = req.user.bankId;
 
@@ -507,7 +526,7 @@ export class LoanController
             const amount = (loan as any)[0].amount;
             
             // transfer loan amount from bank's wallet to customer's wallet
-            await this.walletService.transferFunds(bankId, customerId, amount, `Loan disbursement to customer ${customerId}`, loanId);
+            await this.walletService.transferFunds(bankId, customerId, "bank", "customer", amount, `Loan disbursement to customer ${customerId}`, loanId);
 
             // Update loan status to active
             await pool.query(
@@ -533,6 +552,8 @@ export class LoanController
     {
         try
         {
+            console.log("🔍 RejectLoan: Processing loan rejection")
+
             const loanId = req.params.id;
             const bankId = req.user.bankId;
 

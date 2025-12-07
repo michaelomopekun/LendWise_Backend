@@ -8,6 +8,8 @@ export class CustomerController
     {
         try
         {
+            console.log("🔍 GetCustomerProfile: Fetching customer profile");
+
             const customerId = req.params.customerId;
 
             const pool = await dbSetUp();

@@ -1,3 +1,4 @@
+import { parse } from 'path';
 import { dbSetUp } from '../db/database';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,11 +13,13 @@ export class WalletService
      * @param reference - Reference ID (e.g., loan ID, repayment ID)
      * @returns Transaction details
      */
-    async transferFunds( senderId: string, recipientId: string, amount: number, description: string = 'Wallet transfer', reference: string = '')
+    async transferFunds( senderId: string, recipientId: string, senderRole: string, recipientRole: string, amount: number, description: string = 'Wallet transfer', reference: string = '')
     {
         try
         {
             const pool = await dbSetUp();
+
+            amount = parseInt(amount as any);
 
             // Validate amount
             if (amount <= 0)
@@ -25,7 +28,7 @@ export class WalletService
             }
 
             // Get sender's wallet
-            const senderWallet = await this.getWalletByUserId(senderId);
+            const senderWallet = await this.getWalletByUserId(senderId, senderRole);
             if (!senderWallet)
             {
                 throw new Error('Sender wallet not found');
@@ -44,7 +47,7 @@ export class WalletService
             }
 
             // Get recipient's wallet
-            const recipientWallet = await this.getWalletByUserId(recipientId);
+            const recipientWallet = await this.getWalletByUserId(recipientId, recipientRole);
             if (!recipientWallet)
             {
                 throw new Error('Recipient wallet not found');
@@ -57,16 +60,16 @@ export class WalletService
             }
 
             // Update sender's balance (debit)
-            const newSenderBalance = senderWallet.balance - amount;
+            const newSenderBalance = parseInt(senderWallet.balance) - amount;
             await pool.query(
-                `UPDATE wallet SET balance = ? WHERE id = ?`,
+                `UPDATE wallets SET balance = ? WHERE id = ?`,
                 [newSenderBalance, senderWallet.id]
             );
 
             // Update recipient's balance (credit)
-            const newRecipientBalance = recipientWallet.balance + amount;
+            const newRecipientBalance = parseInt(recipientWallet.balance) + amount;
             await pool.query(
-                `UPDATE wallet SET balance = ? WHERE id = ?`,
+                `UPDATE wallets SET balance = ? WHERE id = ?`,
                 [newRecipientBalance, recipientWallet.id]
             );
 
@@ -76,7 +79,7 @@ export class WalletService
             const transactionRef = reference || `TRANSFER-${senderTransactionId.substring(0, 8)}`;
 
             await pool.query(
-                `INSERT INTO wallet_transaction (id, wallet_id, amount, transaction_type, reference, description, created_at)
+                `INSERT INTO wallet_transactions (id, wallet_id, amount, transaction_type, reference, description, created_at)
                  VALUES (?, ?, ?, 'debit', ?, ?, ?)`,
                 [senderTransactionId, senderWallet.id, amount, transactionRef, description, now]
             );
@@ -84,7 +87,7 @@ export class WalletService
             // Create credit transaction for recipient
             const recipientTransactionId = uuidv4();
             await pool.query(
-                `INSERT INTO wallet_transaction (id, wallet_id, amount, transaction_type, reference, description, created_at)
+                `INSERT INTO wallet_transactions (id, wallet_id, amount, transaction_type, reference, description, created_at)
                  VALUES (?, ?, ?, 'credit', ?, ?, ?)`,
                 [recipientTransactionId, recipientWallet.id, amount, transactionRef, description, now]
             );
@@ -114,7 +117,7 @@ export class WalletService
      * @param userId - User ID (customer or bank)
      * @returns Wallet details or null
      */
-    async getWalletByUserId(userId: string)
+    async getWalletByUserId(userId: string, role: string)
     {
         try
         {
@@ -122,10 +125,10 @@ export class WalletService
 
             const [wallet] = await pool.query(
                 `SELECT id, customer_id, bankId, balance, wallet_type, status, date_created
-                 FROM wallet
-                 WHERE customer_id = ? OR bankId = ?
+                 FROM wallets
+                 WHERE wallet_type = ? AND (customer_id = ? OR bankId = ?)
                  LIMIT 1`,
-                [userId, userId]
+                [role, userId, userId]
             );
 
             if (!Array.isArray(wallet) || wallet.length === 0)
@@ -155,7 +158,7 @@ export class WalletService
 
             const [wallet] = await pool.query(
                 `SELECT id, customer_id, bankId, balance, wallet_type, status, date_created
-                 FROM wallet
+                 FROM wallets
                  WHERE id = ?`,
                 [walletId]
             );

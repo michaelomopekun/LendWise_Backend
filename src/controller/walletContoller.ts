@@ -10,7 +10,11 @@ export class WalletController
     {
         try
         {
+            console.log("🔍 GetWallet: Fetching wallet details")
+
             const userId = req.user?.id;
+            const role = req.user?.role;
+            const bankId = req.user?.bankId;
             // const { bankId } = req.user?.bankId as any;
 
             if (!userId)
@@ -20,19 +24,41 @@ export class WalletController
 
             const pool = await dbSetUp();
 
-            const [wallet] = await pool.query(
-                `SELECT id, bankId, customer_id, wallet_type, balance, date_created, status 
-                 FROM wallets 
-                 WHERE customer_id = ? OR bankId = ?`,
-                [userId, userId]
-            );
-
-            if (!Array.isArray(wallet) || wallet.length === 0)
+            switch(role)
             {
-                return res.status(404).json({ message: 'Wallet not found' });
-            }
+                case "bank":
+                    const [bank_wallet] = await pool.query(
+                        `SELECT id, bankId, customer_id, wallet_type, balance, date_created, status 
+                         FROM wallets 
+                         WHERE wallet_type = "bank" AND bankId = ?`,
+                        [userId]
+                    );
 
-            return res.status(200).json(wallet);
+                    if (!Array.isArray(bank_wallet) || bank_wallet.length === 0)
+                    {
+                        return res.status(404).json({ message: 'bank wallet not found' });
+                    }
+
+                    return res.status(200).json(bank_wallet);
+
+                case "customer":
+                    const [customer_wallet] = await pool.query(
+                        `SELECT id, bankId, customer_id, wallet_type, balance, date_created, status 
+                         FROM wallets 
+                         WHERE wallet_type = "customer" AND customer_id = ? AND bankId = ?`,
+                        [userId, bankId]
+                    );
+
+                    if (!Array.isArray(customer_wallet) || customer_wallet.length === 0)
+                    {
+                        return res.status(404).json({ message: 'customer wallet not found' });
+                    }
+
+                    return res.status(200).json(customer_wallet);
+
+                default:
+                    return res.status(400).json({ message: 'Invalid user role' });
+            }
         }
         catch (error)
         {
@@ -47,6 +73,8 @@ export class WalletController
     {
         try
         {
+            console.log("🔍 GetWalletTransactions: Fetching wallet transactions")
+
             const userId = req.user?.id;
 
             if (!userId)
@@ -58,7 +86,7 @@ export class WalletController
 
             // Get wallet ID for the authenticated user
             const [userWallet] = await pool.query(
-                `SELECT id FROM wallet WHERE customer_id = ? OR bankId = ?`,
+                `SELECT id FROM wallets WHERE customer_id = ? OR bankId = ?`,
                 [userId, userId]
             );
 
@@ -72,7 +100,7 @@ export class WalletController
             // Get all transactions for this wallet
             const [transactions] = await pool.query(
                 `SELECT id, wallet_id, amount, transaction_type, reference, description, created_at
-                FROM wallet_transaction
+                FROM wallet_transactions
                 WHERE wallet_id = ?
                 ORDER BY created_at DESC`,
                 [walletId]
@@ -104,7 +132,10 @@ export class WalletController
     {
         try
         {
+            console.log("🔍 AddFundToWallet: Adding funds to wallet");
+
             const userId = req.user?.id;
+            const role = req.user?.role;
             const { amount, description } = req.body;
 
             // Validate user is authenticated
@@ -129,8 +160,8 @@ export class WalletController
 
             // Get wallet for the authenticated user
             const [userWallet] = await pool.query(
-                `SELECT id, balance FROM wallet WHERE customer_id = ? OR bankId = ?`,
-                [userId, userId]
+                `SELECT id, balance FROM wallets WHERE wallet_type = ? AND (customer_id = ? OR bankId = ?)`,
+                [role, userId, userId]
             );
 
             if (!Array.isArray(userWallet) || userWallet.length === 0)
@@ -140,11 +171,11 @@ export class WalletController
 
             const walletId = (userWallet as any)[0].id;
             const currentBalance = (userWallet as any)[0].balance;
-            const newBalance = currentBalance + amount;
+            const newBalance = parseInt(currentBalance) + amount;
 
             // Update wallet balance
             await pool.query(
-                `UPDATE wallet SET balance = ? WHERE id = ?`,
+                `UPDATE wallets SET balance = ? WHERE id = ?`,
                 [newBalance, walletId]
             );
 
@@ -153,7 +184,7 @@ export class WalletController
             const now = new Date();
 
             await pool.query(
-                `INSERT INTO wallet_transaction (id, wallet_id, amount, transaction_type, reference, description, created_at)
+                `INSERT INTO wallet_transactions (id, wallet_id, amount, transaction_type, reference, description, created_at)
                  VALUES (?, ?, ?, 'credit', ?, ?, ?)`,
                 [transactionId, walletId, amount, `FUND-${transactionId.substring(0, 8)}`, description || 'Wallet funding', now]
             );
@@ -179,7 +210,10 @@ export class WalletController
     {
         try
         {
+            console.log("🔍 WithdrawFundFromWallet: Withdrawing funds from wallet")
+
             const userId = req.user?.id;
+            const role = req.user?.role;
             const { amount, description } = req.body;
 
             // Validate user is authenticated
@@ -204,8 +238,8 @@ export class WalletController
 
             // Get wallet for the authenticated user
             const [userWallet] = await pool.query(
-                `SELECT id, balance FROM wallet WHERE customer_id = ? OR bankId = ?`,
-                [userId, userId]
+                `SELECT id, balance FROM wallets WHERE wallet_type = ? AND (customer_id = ? OR bankId = ?)`,
+                [role, userId, userId]
             );
 
             if (!Array.isArray(userWallet) || userWallet.length === 0)
@@ -228,7 +262,7 @@ export class WalletController
 
             // Update wallet balance
             await pool.query(
-                `UPDATE wallet SET balance = ? WHERE id = ?`,
+                `UPDATE wallets SET balance = ? WHERE id = ?`,
                 [newBalance, walletId]
             );
 
@@ -237,7 +271,7 @@ export class WalletController
             const now = new Date();
 
             await pool.query(
-                `INSERT INTO wallet_transaction (id, wallet_id, amount, transaction_type, reference, description, created_at)
+                `INSERT INTO wallet_transactions (id, wallet_id, amount, transaction_type, reference, description, created_at)
                 VALUES (?, ?, ?, 'debit', ?, ?, ?)`,
                 [transactionId, walletId, amount, `WITHDRAW-${transactionId.substring(0, 8)}`, description || 'Wallet withdrawal', now]
             );
