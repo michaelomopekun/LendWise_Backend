@@ -11,8 +11,7 @@ export async function dbSetUp()
         password: process.env.DB_PASSWORD,
         port: parseInt(process.env.DB_PORT || "3306")
     });
-    
-    
+
     try 
     {
         await initialConnection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME}`);
